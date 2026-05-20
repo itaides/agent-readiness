@@ -7,7 +7,9 @@
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
 </p>
 
-![agent-readiness CLI — scanning robots.txt, sitemap, MCP card, OAuth metadata and more from localhost](assets/launch.gif)
+<p align="center">
+  <img src="assets/launch.gif" alt="agent-readiness CLI — scanning robots.txt, sitemap, MCP card, OAuth metadata and more from localhost" width="600">
+</p>
 
 <h2 align="center">Check whether your site is ready for AI agents. From localhost.</h2>
 
