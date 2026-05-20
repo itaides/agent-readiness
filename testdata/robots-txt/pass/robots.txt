@@ -1,0 +1,15 @@
+# A polite, agent-aware robots.txt fixture.
+
+User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /docs/
+Disallow: /private/
+
+User-agent: ClaudeBot
+Allow: /
+
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
+Sitemap: https://example.com/sitemap.xml

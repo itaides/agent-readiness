@@ -1,0 +1,34 @@
+{
+  "name": "agent-readiness",
+  "version": "0.0.1",
+  "description": "Check whether a website is ready for AI agents — locally or in production.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "agent-readiness": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "prompts",
+    "docs"
+  ],
+  "scripts": {
+    "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "audit:specs": "bun run scripts/audit-spec-staleness.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "p-limit": "^7.3.0",
+    "robots-parser": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "bun": ">=1.1"
+  }
+}
