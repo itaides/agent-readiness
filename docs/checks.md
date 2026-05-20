@@ -230,12 +230,16 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 #### `mcp-server-card`
 
 - **Title**: MCP Server Card
-- **Spec**: https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json (asOf: 2026-04-17)
+- **Spec**: https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json (asOf: 2026-05-20). The MCP Server Card has **two flavors** in the wild as of mid-2026; this check accepts either.
 - **Request**: `GET <origin>/.well-known/mcp/server-card.json`
 - **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
-  - Body contains `protocolVersion`, `serverInfo`, `transport`.
-- **Evidence**: server name, protocol version.
+  - Body has a `transport` field (required by both flavors).
+  - Body has `serverInfo.name` as a non-empty string (required by both flavors).
+  - If body has `protocolVersion` → reported as `v1.json` format.
+  - If body has no `protocolVersion` → reported as `SEP-1649 / server-card-v1` format.
+- **Why both flavors**: the v1.json schema referenced by the original Cloudflare blog post is the older shape with a top-level `protocolVersion`. Real-world servers (e.g. `matzarich.app`) ship the SEP-1649 / `server-card-v1` shape, which keeps `serverInfo` + `transport` but drops `protocolVersion` in favor of richer `auth`/`capabilities` blocks. Accepting only one produces false negatives on real working sites.
+- **Evidence**: server name, detected flavor, protocol version if v1.
 
 #### `webmcp`
 
