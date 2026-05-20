@@ -7,6 +7,8 @@
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
 </p>
 
+![agent-readiness CLI — scanning robots.txt, sitemap, MCP card, OAuth metadata and more from localhost](assets/launch.gif)
+
 <h2 align="center">Check whether your site is ready for AI agents. From localhost.</h2>
 
 <p align="center"><em>Same checks isitagentready.com runs — on staging, in CI, before you ship.</em></p>
