@@ -1,0 +1,239 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" role="img" aria-label="agent-readiness — Is Your Site Ready for AI Agents?">
+  <title>agent-readiness — Is Your Site Ready for AI Agents?</title>
+
+  <defs>
+    <linearGradient id="hl" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7C5CFC"/>
+      <stop offset="100%" stop-color="#22C7E8"/>
+    </linearGradient>
+    <linearGradient id="arc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22C7E8"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#D9DCE6"/>
+    </pattern>
+    <radialGradient id="vignette" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#FAFAF7" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#FAFAF7" stop-opacity="1"/>
+    </radialGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0B1736" flood-opacity="0.10"/>
+    </filter>
+    <filter id="softer" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0B1736" flood-opacity="0.07"/>
+    </filter>
+    <!--
+      Typewriter clip — default (no SMIL): fully open so static renderers
+      show the typed command. SMIL: collapses to 0 then expands back to full.
+    -->
+    <clipPath id="ty">
+      <rect x="100" y="402" width="540" height="30">
+        <animate attributeName="width"
+          values="540;0;0;540;540"
+          keyTimes="0;0.02;0.08;0.30;1"
+          dur="6s" repeatCount="indefinite"/>
+      </rect>
+    </clipPath>
+    <style>
+      .sans { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .ink { fill: #0B1736; }
+      .soft { fill: #3A4A6B; }
+      .mute { fill: #7C8AA8; }
+      @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+      .cursor { animation: blink 0.9s steps(1) infinite; }
+    </style>
+    <symbol id="check" viewBox="0 0 24 24" width="16" height="16">
+      <circle cx="12" cy="12" r="11" fill="#E6F8EE"/>
+      <path d="M7 12.5l3.2 3.2L17 9" stroke="#22C55E" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="warn" viewBox="0 0 24 24" width="16" height="16">
+      <circle cx="12" cy="12" r="11" fill="#FFF3DA"/>
+      <path d="M12 7v6" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="12" cy="16.5" r="1.4" fill="#F59E0B"/>
+    </symbol>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="#FAFAF7"/>
+  <rect width="1080" height="1080" fill="url(#dots)" opacity="0.55"/>
+  <rect width="1080" height="1080" fill="url(#vignette)"/>
+
+  <!-- Headline + subtitle -->
+  <g class="sans">
+    <text x="72" y="160" font-size="70" font-weight="800" letter-spacing="-1.6" class="ink">Is Your Site Ready</text>
+    <text x="72" y="236" font-size="70" font-weight="800" letter-spacing="-1.6" class="ink">for <tspan fill="url(#hl)">AI Agents?</tspan></text>
+    <text x="72" y="288" font-size="24" font-weight="500" letter-spacing="-0.2" class="soft">Check localhost, staging, and CI before you ship.</text>
+  </g>
+
+  <!-- ===== Terminal card ===== -->
+  <g filter="url(#soft)">
+    <rect x="64" y="332" width="600" height="600" rx="22" fill="#FFFFFF" stroke="#E6E7EE" stroke-width="1"/>
+  </g>
+
+  <!-- Terminal header -->
+  <g>
+    <circle cx="98" cy="370" r="6" fill="#F87171"/>
+    <circle cx="118" cy="370" r="6" fill="#FBBF24"/>
+    <circle cx="138" cy="370" r="6" fill="#34D399"/>
+    <text x="166" y="375" class="mono mute" font-size="13" letter-spacing="0.4">agent-readiness</text>
+    <rect x="588" y="358" width="56" height="22" rx="6" fill="#EEEFF4"/>
+    <text x="616" y="373" text-anchor="middle" class="mono mute" font-size="12">v0.1.0</text>
+    <line x1="86" y1="390" x2="642" y2="390" stroke="#EEEFF4" stroke-width="1"/>
+  </g>
+
+  <!-- Command (clipped) + blinking cursor that sweeps along during typing -->
+  <g class="mono">
+    <text x="92" y="420" font-size="18" fill="#7C5CFC">›</text>
+    <g clip-path="url(#ty)">
+      <text x="108" y="420" font-size="18" class="ink" letter-spacing="-0.2">$ agent-readiness http://localhost:3000</text>
+    </g>
+    <rect x="640" y="406" width="9" height="18" fill="#0B1736" class="cursor">
+      <animate attributeName="x"
+        values="640;100;100;640;640"
+        keyTimes="0;0.02;0.08;0.30;1"
+        dur="6s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <line x1="86" y1="440" x2="642" y2="440" stroke="#EEEFF4" stroke-width="1"/>
+
+  <!-- Scan section headers -->
+  <g class="sans" font-size="12.5" font-weight="700" letter-spacing="1.4" fill="#7C5CFC">
+    <text x="92" y="470">— DISCOVERABILITY</text>
+    <text x="92" y="556">— CONTENT</text>
+    <text x="92" y="642">— BOT ACCESS</text>
+    <text x="92" y="728">— CAPABILITIES</text>
+  </g>
+
+  <!-- Scan rows -->
+  <g class="mono" font-size="15">
+    <!-- DISCOVERABILITY -->
+    <use href="#check" x="116" y="486"/><text x="142" y="498" class="ink">robots.txt</text>
+    <rect x="558" y="486" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="498" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <use href="#check" x="116" y="508"/><text x="142" y="520" class="ink">sitemap.xml</text>
+    <rect x="558" y="508" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="520" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <!-- CONTENT -->
+    <use href="#check" x="116" y="572"/><text x="142" y="584" class="ink">Link: api-catalog</text>
+    <rect x="558" y="572" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="584" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <use href="#check" x="116" y="594"/><text x="142" y="606" class="ink">Markdown</text>
+    <rect x="558" y="594" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="606" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <!-- BOT ACCESS (WARN) -->
+    <use href="#warn" x="116" y="658"/><text x="142" y="670" fill="#F59E0B">llms.txt</text>
+    <rect x="558" y="658" width="48" height="16" rx="5" fill="#FFF3DA"/><text x="582" y="670" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#F59E0B">WARN</text>
+    <use href="#check" x="116" y="680"/><text x="142" y="692" class="ink">Content-Signal</text>
+    <rect x="558" y="680" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="692" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <!-- CAPABILITIES -->
+    <use href="#check" x="116" y="744"/><text x="142" y="756" class="ink">MCP server card</text>
+    <rect x="558" y="744" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="756" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+    <use href="#check" x="116" y="766"/><text x="142" y="778" class="ink">OAuth metadata</text>
+    <rect x="558" y="766" width="48" height="16" rx="5" fill="#E6F8EE"/><text x="582" y="778" text-anchor="middle" class="sans" font-size="10.5" font-weight="700" letter-spacing="1" fill="#22C55E">PASS</text>
+  </g>
+
+  <!-- OVERALL: PASS badge with pulsing border -->
+  <g transform="translate(92, 880)">
+    <rect width="200" height="34" rx="17" fill="#E6F8EE" stroke="#22C55E" stroke-opacity="0.35" stroke-width="1.2">
+      <animate attributeName="stroke-width" values="1.2;2.6;1.2" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="0.35;0.7;0.35" dur="2.4s" repeatCount="indefinite"/>
+    </rect>
+    <use href="#check" x="10" y="9"/>
+    <text x="36" y="22" class="sans" font-size="14" font-weight="700" letter-spacing="0.4" fill="#22C55E">OVERALL: PASS</text>
+  </g>
+  <text x="304" y="901" class="mono mute" font-size="13" letter-spacing="0.4">14/14 checks · 0 errors · 1 warn</text>
+
+  <!-- ===== Source cards ===== -->
+  <!-- localhost -->
+  <g>
+    <g filter="url(#softer)"><rect x="700" y="332" width="308" height="78" rx="14" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <rect x="716" y="349" width="44" height="44" rx="12" fill="#7C5CFC14"/>
+    <g stroke="#7C5CFC" stroke-width="1.8" fill="none">
+      <rect x="725" y="358" width="26" height="18" rx="2"/>
+      <path d="M732 386h12M738 380v6" stroke-linecap="round"/>
+    </g>
+    <text x="772" y="370" class="sans ink" font-size="18" font-weight="700" letter-spacing="-0.2">localhost</text>
+    <text x="772" y="389" class="mono mute" font-size="12">:3000</text>
+    <circle cx="990" cy="371" r="8" fill="#7C5CFC22"/>
+    <circle cx="990" cy="371" r="4" fill="#7C5CFC">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- staging -->
+  <g>
+    <g filter="url(#softer)"><rect x="700" y="424" width="308" height="78" rx="14" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <rect x="716" y="441" width="44" height="44" rx="12" fill="#22C7E814"/>
+    <g stroke="#22C7E8" stroke-width="1.8" fill="none">
+      <rect x="724" y="450" width="28" height="26" rx="2"/>
+      <line x1="724" y1="458" x2="752" y2="458"/>
+      <circle cx="729" cy="455" r="1" fill="#22C7E8"/>
+      <circle cx="733" cy="455" r="1" fill="#22C7E8"/>
+    </g>
+    <text x="772" y="462" class="sans ink" font-size="18" font-weight="700" letter-spacing="-0.2">staging</text>
+    <text x="772" y="481" class="mono mute" font-size="12">preview.app</text>
+    <circle cx="990" cy="463" r="8" fill="#22C7E822"/>
+    <circle cx="990" cy="463" r="4" fill="#22C7E8">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- CI -->
+  <g>
+    <g filter="url(#softer)"><rect x="700" y="516" width="308" height="78" rx="14" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <rect x="716" y="533" width="44" height="44" rx="12" fill="#19B6A214"/>
+    <g stroke="#19B6A2" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M723 555a8 8 0 0 1 14 -5"/>
+      <path d="M751 555a8 8 0 0 1 -14 5"/>
+      <path d="M748 543v4h-4M726 567v-4h4"/>
+    </g>
+    <text x="772" y="554" class="sans ink" font-size="18" font-weight="700" letter-spacing="-0.2">CI</text>
+    <text x="772" y="573" class="mono mute" font-size="12">GitHub Actions</text>
+    <circle cx="990" cy="555" r="8" fill="#19B6A222"/>
+    <circle cx="990" cy="555" r="4" fill="#19B6A2">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Dotted connectors with flowing dashes -->
+  <g fill="none" stroke="#22C7E8" stroke-width="1.6" stroke-dasharray="4 6" opacity="0.85">
+    <path d="M 1002 371 C 1030 371, 854 620, 854 658">
+      <animate attributeName="stroke-dashoffset" values="40;0" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 1002 463 C 1030 463, 854 620, 854 658">
+      <animate attributeName="stroke-dashoffset" values="40;0" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 1002 555 C 1030 555, 854 620, 854 658">
+      <animate attributeName="stroke-dashoffset" values="40;0" dur="3s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- ===== Readiness Check circle ===== -->
+  <g transform="translate(854 712)">
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="1;1.04;1" dur="2.6s" repeatCount="indefinite" additive="sum"/>
+      <circle r="52" fill="#FFFFFF" stroke="#E6E7EE" stroke-width="1" filter="url(#softer)"/>
+      <circle r="52" fill="none" stroke="url(#arc)" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0" transform="rotate(-90)"/>
+      <path d="M-18 -1 l12 12 l24 -28" fill="none" stroke="#22C55E" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <text x="854" y="800" text-anchor="middle" class="sans ink" font-size="16" font-weight="700" letter-spacing="-0.2">AI Agent Readiness Check</text>
+  <text x="854" y="822" text-anchor="middle" class="mono mute" font-size="12" letter-spacing="0.4">14/14 · all sources</text>
+
+  <!-- ===== Bottom chips ===== -->
+  <g>
+    <g filter="url(#softer)"><rect x="296" y="940" width="148" height="46" rx="23" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <circle cx="316" cy="963" r="9" fill="#7C5CFC22"/>
+    <circle cx="316" cy="963" r="5" fill="#7C5CFC"/>
+    <text x="332" y="969" class="sans ink" font-size="16" font-weight="600">14 checks</text>
+
+    <g filter="url(#softer)"><rect x="456" y="940" width="180" height="46" rx="23" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <circle cx="476" cy="963" r="9" fill="#22C7E822"/>
+    <circle cx="476" cy="963" r="5" fill="#22C7E8"/>
+    <text x="492" y="969" class="sans ink" font-size="16" font-weight="600">Zero telemetry</text>
+
+    <g filter="url(#softer)"><rect x="648" y="940" width="136" height="46" rx="23" fill="#FFFFFF" stroke="#E6E7EE"/></g>
+    <circle cx="668" cy="963" r="9" fill="#19B6A222"/>
+    <circle cx="668" cy="963" r="5" fill="#19B6A2"/>
+    <text x="684" y="969" class="sans ink" font-size="16" font-weight="600">CI-ready</text>
+  </g>
+</svg>

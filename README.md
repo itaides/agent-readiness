@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/launch.gif" alt="agent-readiness CLI — scanning robots.txt, sitemap, MCP card, OAuth metadata and more from localhost" width="600">
+  <img src="assets/launch.svg" alt="agent-readiness CLI — scanning robots.txt, sitemap, MCP card, OAuth metadata and more from localhost" width="780">
 </p>
 
 <h2 align="center">Check whether your site is ready for AI agents. From localhost.</h2>
