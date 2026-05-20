@@ -1,16 +1,38 @@
 {
   "name": "agent-readiness",
   "version": "0.0.1",
-  "description": "Check whether a website is ready for AI agents — locally or in production.",
+  "description": "CLI that checks whether a website is ready for AI agents — locally or in production. Same checks as isitagentready.com, runs against localhost.",
   "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/itaides/agent-readiness",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itaides/agent-readiness.git"
+  },
+  "bugs": "https://github.com/itaides/agent-readiness/issues",
+  "keywords": [
+    "ai-agents",
+    "agent-readiness",
+    "mcp",
+    "robots-txt",
+    "llms-txt",
+    "well-known",
+    "isitagentready",
+    "cli",
+    "scanner",
+    "cloudflare"
+  ],
   "bin": {
     "agent-readiness": "./dist/cli.js"
   },
   "files": [
     "dist",
     "prompts",
-    "docs"
+    "docs",
+    "README.md",
+    "LICENSE",
+    "PRIVACY.md",
+    "SECURITY.md"
   ],
   "scripts": {
     "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
