@@ -70,7 +70,7 @@ Every check is identified by a stable kebab-case `id`. Each check:
 
 A check returns `fail` (does not throw) on error. The scanner catches exceptions and converts them to `fail` with `message: "Internal error: …"`.
 
-### Universal F1 defense
+### Universal shape validation
 
 Any check that expects a JSON body MUST:
 
@@ -177,7 +177,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: Web Bot Auth public key directory
 - **Spec**: draft-ietf-httpbis-message-signatures (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/http-message-signatures-directory`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - Status 200.
   - Content-type contains `json`.
   - Body parses as JSON.
@@ -192,7 +192,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: Agent Skills index
 - **Spec**: Cloudflare proposal (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/agent-skills/index.json`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
   - Body has a `skills` array OR is a top-level array, with at least one entry.
 - **Evidence**: skill count, first skill name (if available).
@@ -202,7 +202,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: API Catalog (RFC 9727)
 - **Spec**: https://datatracker.ietf.org/doc/html/rfc9727 (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/api-catalog`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
   - Body matches the RFC 9727 linkset shape: object with a `linkset` array, OR a top-level array of link descriptors.
 - **Evidence**: link count.
@@ -212,7 +212,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: OAuth 2.0 Authorization Server Metadata (RFC 8414)
 - **Spec**: https://datatracker.ietf.org/doc/html/rfc8414 (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/oauth-authorization-server`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
   - Body contains `issuer` (required by RFC 8414).
 - **Evidence**: issuer value.
@@ -222,7 +222,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: OAuth 2.0 Protected Resource Metadata (RFC 9728)
 - **Spec**: https://datatracker.ietf.org/doc/html/rfc9728 (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/oauth-protected-resource`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
   - Body contains `resource` (required by RFC 9728).
 - **Evidence**: resource value.
@@ -232,7 +232,7 @@ Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies fo
 - **Title**: MCP Server Card
 - **Spec**: https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json (asOf: 2026-04-17)
 - **Request**: `GET <origin>/.well-known/mcp/server-card.json`
-- **Pass criteria** (F1-defended):
+- **Pass criteria** (shape-validated):
   - 200 + JSON content-type + parseable JSON.
   - Body contains `protocolVersion`, `serverInfo`, `transport`.
 - **Evidence**: server name, protocol version.

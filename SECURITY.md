@@ -19,6 +19,6 @@ Findings about *target websites* you scan are not vulnerabilities in this tool â
 - HTTP body size cap (5 MB default) prevents OOM from large/malicious responses.
 - Per-request timeout (5 s default) prevents hung scans.
 - Redirect cap (5 hops) prevents redirect-chain DoS.
-- F1 defense (content-type + JSON shape validation) prevents false positives from SPA fallthroughs.
+- Strict response shape validation (content-type + JSON parse + required-field check) prevents false positives from SPA-fallthrough servers.
 - `--insecure` is automatically enabled only for loopback/RFC1918/ULA hosts and explicit user opt-in. Public hosts get strict TLS verification.
 - No `eval`, no dynamic `require`, no remote code loading.

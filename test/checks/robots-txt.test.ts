@@ -72,7 +72,7 @@ describe('robots-txt check', () => {
     }
   });
 
-  it('fails when server returns 200 + text/html (SPA fallthrough, the F1 defense)', async () => {
+  it('fails when server returns 200 + text/html (SPA fallthrough — shape validation)', async () => {
     const fixture = await startFixture((_req, res) => {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end('<!doctype html><html><body><div id="root"></div></body></html>');

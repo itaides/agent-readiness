@@ -22,7 +22,7 @@ labels: enhancement, new-check
 
 ## How does the standard fail today on real sites?
 
-<!-- Optional but valuable — describe the SPA-fallthrough / partial-implementation cases the F1 defense should catch. -->
+<!-- Optional but valuable — describe the SPA-fallthrough / partial-implementation cases the shape validation should catch. -->
 
 ## Where does this fit?
 

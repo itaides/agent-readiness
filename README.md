@@ -3,32 +3,20 @@
 <p align="center">
   <a href="https://github.com/itaides/agent-readiness/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/runtime-bun%201.1%2B-black?logo=bun" alt="Bun 1.1+">
-  <img src="https://img.shields.io/badge/bundle-37%20KB-brightgreen" alt="37 KB bundle">
   <img src="https://img.shields.io/badge/checks-14-blue" alt="14 checks">
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
-  <img src="https://img.shields.io/badge/runtime%20deps-2-lightgrey" alt="2 runtime dependencies">
 </p>
 
-<h2 align="center">Is your site ready for AI agents? Find out — without leaving localhost.</h2>
+<h2 align="center">Check whether your site is ready for AI agents. From localhost.</h2>
 
-<p align="center"><em>Same checks as isitagentready.com. CLI you can run on staging, intranet, or a PR you haven't merged yet.</em></p>
+<p align="center"><em>Same checks isitagentready.com runs — on staging, in CI, before you ship.</em></p>
 
-<p align="center">
-<strong>The public agent-readiness tools can't scan code you haven't shipped.</strong>
-</p>
-
-<p align="center">
-isitagentready.com and Cloudflare's URL Scanner are great — but they only work against URLs that resolve from the public internet. That rules out <code>localhost:3000</code>, your staging deploy behind a VPN, your CI preview environment, and every PR before it merges. Which is exactly when fixing things is cheap.
-</p>
-
-<p align="center">
-<code>agent-readiness</code> is a single-binary CLI that runs the same 14 checks anywhere — public or local. Plus JSON output for piping, planned <code>--baseline</code> for CI gating, and an F1 defense that rejects SPA fallthroughs the public tools may pass falsely.
-</p>
+The public agent-readiness tools only see what's on the open internet. That rules out `http://localhost:3000`, your staging deploy behind a VPN, your CI preview, and every PR before it merges — exactly when fixing things is cheap. `agent-readiness` is a small CLI you point at any URL you can reach.
 
 ```
-$ bunx agent-readiness https://matzarich.app/
-agent-readiness  https://matzarich.app/
-scanned          2026-05-20T07:31:09.526Z
+$ agent-readiness https://example.com
+agent-readiness  https://example.com/
+scanned          2026-05-20T07:31:09Z
 
 [discoverability] 3/3 passing
   PASS  robots.txt — Valid robots.txt with 11 User-agent group(s)
@@ -41,27 +29,30 @@ scanned          2026-05-20T07:31:09.526Z
 [bot-access] 2/3 passing
   PASS  Content-Signal directive in robots.txt — Recognized signals: ai-train, search
   PASS  AI bot rules in robots.txt — Rules present for: GPTBot, ClaudeBot, ...
-  FAIL  Web Bot Auth public key directory — 200 but content-type "text/html" — likely SPA fallthrough
+  FAIL  Web Bot Auth public key directory — 200 but content-type "text/html" — looks like SPA fallthrough
 ```
 
 ---
 
 ## Install
 
-**Requires [bun](https://bun.sh) 1.1+.**
+The repo is private for now. Clone and link:
 
 ```sh
-bun install -g github:itaides/agent-readiness
+git clone git@github.com:itaides/agent-readiness.git
+cd agent-readiness
+bun install
+bun link
 agent-readiness https://example.com
 ```
 
-Or run without installing:
+When the repo flips public, the one-liner becomes:
 
 ```sh
-bunx github:itaides/agent-readiness https://example.com
+bun install -g github:itaides/agent-readiness
 ```
 
-To scan a local dev server (HTTPS with self-signed cert? RFC1918? `::1`? — all handled):
+Scanning a local dev server (HTTPS with self-signed cert, RFC1918, IPv6 loopback — all handled):
 
 ```sh
 agent-readiness http://localhost:3000
@@ -71,7 +62,7 @@ agent-readiness http://localhost:3000
 
 ## What it checks
 
-14 checks across 4 categories. See [`docs/checks.md`](docs/checks.md) for endpoint URLs, pass criteria, and spec references for every check.
+14 checks across 4 categories. Full pass criteria, endpoints, and spec references live in [`docs/checks.md`](docs/checks.md).
 
 ### Discoverability (3)
 - `robots.txt` ([RFC 9309](https://datatracker.ietf.org/doc/html/rfc9309))
@@ -84,7 +75,7 @@ agent-readiness http://localhost:3000
 
 ### Bot access control (3)
 - `Content-Signal:` directive in `robots.txt` (`ai-train`, `ai-input`, `search`)
-- AI bot rules in `robots.txt` (matches against 14 known bots: GPTBot, ClaudeBot, PerplexityBot, Google-Extended, etc.)
+- AI bot rules in `robots.txt` — looks for User-agent lines targeting GPTBot, ClaudeBot, PerplexityBot, Google-Extended, and 10 more
 - Web Bot Auth key directory at `/.well-known/http-message-signatures-directory`
 
 ### Capabilities (6)
@@ -93,10 +84,10 @@ agent-readiness http://localhost:3000
 - OAuth Authorization Server Metadata ([RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414))
 - OAuth Protected Resource Metadata ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728))
 - MCP Server Card at `/.well-known/mcp/server-card.json`
-- WebMCP (heuristic — fetch-only model can't fully detect a runtime JS API; documented as such)
+- WebMCP (heuristic — fetch-only model can't fully detect a runtime JS API; the check states the limitation in its evidence)
 
-### Not yet (see [issue #1](https://github.com/itaides/agent-readiness/issues/1))
-- A2A Agent Card, x402, UCP, ACP, MPP — specs being researched before any check is shipped.
+### Coming, after spec research
+A2A Agent Card, x402, UCP, ACP, MPP — tracked in [issue #1](https://github.com/itaides/agent-readiness/issues/1). The rule: no check ships without explicit pass criteria written into `docs/checks.md` first.
 
 ---
 
@@ -108,7 +99,7 @@ agent-readiness <url> [options]
   --preset all|content|api      Check group preset (default: all)
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
-  --list-checks                 List all available checks and presets, then exit
+  --list-checks                 List every check and preset, then exit
   --include-llms-txt            Run the opt-in llms.txt check
   --format human|json           Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
@@ -129,61 +120,41 @@ agent-readiness https://example.com --format json | jq '.summary'
 ## What makes this different
 
 ### Localhost works
-Every check is implemented from HTTP-level signals only — no headless browser, no JS execution required (except for WebMCP, where the spec genuinely requires JS and we say so explicitly). That means it runs against any URL you can reach from your machine, including `http://localhost:3000`, `https://staging.internal.corp/`, and `http://[::1]:8080/`.
+Every check runs from HTTP-level signals — no headless browser, no JS execution. (One exception: WebMCP, where the spec genuinely requires JS; that check documents the limitation in its evidence.) Point it at any URL you can reach: `http://localhost:3000`, `https://staging.internal.corp/`, `http://[::1]:8080/`.
 
-### F1 defense catches real bugs
-SPA dev servers return `200 OK` + `text/html` for any path, including `/.well-known/*` paths that should be JSON. A naive scanner ("did we get 200?") would falsely report these as passing. Every JSON check in `agent-readiness` validates content-type **and** parses the body **and** checks required fields before claiming a pass.
+### Strict response shape validation
+SPA dev servers return `200 OK` + `text/html` for any path, including `/.well-known/*` paths that should be JSON. A naive scanner ("did we get 200?") reports these as passing. Every JSON check here validates the content-type **and** parses the body **and** checks required fields before claiming a pass. The same logic catches partial implementations in production — a real well-known endpoint serving JSON that's missing required fields fails for the right reason.
 
-**Real example**: scanning `matzarich.app` revealed that `/.well-known/http-message-signatures-directory` returns HTTP 200 + `text/html` (SPA fallthrough). An agent hitting that endpoint expecting JWK keys gets HTML back and silently fails. Our F1 defense flags this; we suspect the web tool does not.
+### Fast feedback
+A full scan finishes in under a second against a typical site. Single-file ~36 KB JS bundle. Bun runtime. Two runtime dependencies (`p-limit`, `robots-parser`), both inlined.
 
-### CI-friendly
-JSON output and pipeable exit codes mean you can wire it into PR pipelines. `--baseline` flag (planned) will exit non-zero only when a check regresses — so the first run never breaks CI, but the next push that introduces a regression does.
-
-### Honest about heuristics
-The WebMCP check requires JavaScript execution to be fully accurate. We don't do JS; we do a heuristic (well-known manifest first, then HTML substring scan). The check definition in `docs/checks.md` says so. No fake green ticks.
-
----
-
-## Real-world scores (2026-05-20)
-
-| Site | Score | Notes |
-|---|---|---|
-| matzarich.app | 10/13 | Excellent — beats `developers.cloudflare.com` on most checks |
-| developers.cloudflare.com | 6/13 | The blog's showcase site; missing OAuth + MCP card schema bug |
-| cloudflare.com | 6/13 | Strong on bot rules, weak on capabilities |
-| eventimio.ai | 3/13 | Strong on Content-Signal, gaps everywhere else |
-
-Bugs found in production deployments during smoke testing:
-- `matzarich.app` Web Bot Auth endpoint returns SPA HTML instead of JWK directory
-- `matzarich.app` MCP Server Card missing required `protocolVersion` field
-- `developers.cloudflare.com` MCP Server Card missing all three required fields
-
-These are exactly the failures the F1 defense is designed to surface.
+### CI integration (in progress)
+JSON output is shipped today. `--baseline` for regression-only failure mode is tracked in the issue queue. The shape of that flag: first scan never breaks CI, but the next push that introduces a regression does.
 
 ---
 
 ## Privacy
 
-The tool makes HTTP requests **only** to the target URL you provide. No analytics, no telemetry, no phone-home, no third-party services. See [`PRIVACY.md`](PRIVACY.md).
+The tool makes HTTP requests **only** to the target URL you provide. No analytics, no telemetry, no third-party services. See [`PRIVACY.md`](PRIVACY.md).
 
-The code in this repository is the code that runs on your machine. The build artifact (`dist/cli.js`) is a single ~37 KB bundle with two runtime dependencies (`p-limit`, `robots-parser`) — both inlined.
+The code in this repository is the code that runs on your machine. The build artifact (`dist/cli.js`) is a single ~36 KB bundle.
 
 ---
 
 ## Security
 
-Reporting a vulnerability: see [`SECURITY.md`](SECURITY.md). Public disclosure of agent-readiness bugs in *target sites* you scan is your call — but please report tool bugs (e.g. an F1 false positive) privately first.
+Reporting a vulnerability: see [`SECURITY.md`](SECURITY.md). Findings about *target sites* you scan are between you and those site operators. Tool bugs (a false pass in shape validation, for example) — please report privately first.
 
 ---
 
 ## Develop
 
 ```sh
-git clone https://github.com/itaides/agent-readiness.git
+git clone git@github.com:itaides/agent-readiness.git
 cd agent-readiness
 bun install
 bun test            # 6 tests, ~60 ms
-bun run build       # dist/cli.js — single ~37 KB bundle
+bun run build       # dist/cli.js — single ~36 KB bundle
 bunx tsc --noEmit -p .
 ```
 
@@ -199,7 +170,7 @@ src/
   registry.ts        # check list + preset definitions
   types.ts           # Check, CheckResult, Target, HttpClient, Report
   checks/
-    _shared.ts       # JSON well-known fetcher (F1 defense) + makeResult helper
+    _shared.ts       # JSON well-known fetcher + shape validation helper
     *.ts             # one file per check (14 of them)
 test/
   checks/*.test.ts   # per-check unit tests

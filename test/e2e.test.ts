@@ -38,7 +38,7 @@ describe('e2e against fixture server', () => {
     }
   });
 
-  it('default-enabled checks (no llms-txt) all fail against an SPA-fallthrough server (F1 defense)', async () => {
+  it('default-enabled checks (no llms-txt) all fail against an SPA-fallthrough server (shape validation)', async () => {
     const fixture = await startFixtureServer('all-fail-spa');
     try {
       const target = createTarget({ url: fixture.url });
