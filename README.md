@@ -101,7 +101,7 @@ agent-readiness <url> [options]
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List every check and preset, then exit
   --include-llms-txt            Run the opt-in llms.txt check
-  --format human|json           Output format (default: human)
+  --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
   --concurrency <n>             Parallel requests (default: 4)
   --insecure                    Skip TLS verification (auto-on for loopback/RFC1918)
@@ -113,6 +113,19 @@ JSON output is pipeable and diffable:
 
 ```sh
 agent-readiness https://example.com --format json | jq '.summary'
+```
+
+HTML output is a single self-contained file — inline CSS, no external assets, dark-mode-aware — ready to open in a browser, attach to a PR comment, or drop into a dashboard:
+
+```sh
+agent-readiness https://example.com --format html > report.html
+open report.html
+```
+
+Markdown output works for PR bodies and Slack threads:
+
+```sh
+agent-readiness https://example.com --format md
 ```
 
 ---

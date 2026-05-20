@@ -2,15 +2,17 @@
 import { createHttpClient } from './http';
 import { createTarget } from './target';
 import { scan } from './scanner';
-import { formatHuman, formatJson } from './report';
+import { formatHuman, formatJson, formatHtml, formatMarkdown } from './report';
 import { checks, PRESETS } from './registry';
 import type { Check } from './types';
 
 type PresetName = 'all' | 'content' | 'api';
 
+type Format = 'human' | 'json' | 'html' | 'md';
+
 interface Args {
   url?: string;
-  format: 'human' | 'json';
+  format: Format;
   timeoutMs: number;
   concurrency: number;
   insecure: boolean;
@@ -32,7 +34,7 @@ Options:
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List all available checks and exit
   --include-llms-txt            Include the opt-in llms.txt check
-  --format human|json           Output format (default: human)
+  --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
   --concurrency <n>             Parallel requests (default: 4)
   --insecure                    Skip TLS verification (auto-on for loopback/RFC1918)
@@ -63,7 +65,7 @@ function parseArgs(argv: string[]): Args {
     switch (a) {
       case '--help': case '-h': args.help = true; break;
       case '--list-checks': args.listChecks = true; break;
-      case '--format': args.format = argv[++i] as Args['format']; break;
+      case '--format': args.format = (argv[++i] ?? 'human') as Format; break;
       case '--timeout': args.timeoutMs = Number(argv[++i]); break;
       case '--concurrency': args.concurrency = Number(argv[++i]); break;
       case '--insecure': args.insecure = true; break;
@@ -113,6 +115,16 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
   }
 
   return { selected: set, warnings };
+}
+
+function render(report: ReturnType<typeof scan> extends Promise<infer R> ? R : never, format: Format): string {
+  switch (format) {
+    case 'json': return formatJson(report);
+    case 'html': return formatHtml(report);
+    case 'md': return formatMarkdown(report);
+    case 'human':
+    default: return formatHuman(report);
+  }
 }
 
 function printChecksList(all: Check[]): void {
@@ -175,8 +187,9 @@ async function main(): Promise<number> {
 
   try {
     const report = await scan(target, selected, http, { concurrency: args.concurrency });
-    process.stdout.write(args.format === 'json' ? formatJson(report) : formatHuman(report));
-    process.stdout.write('\n');
+    const out = render(report, args.format);
+    process.stdout.write(out);
+    if (!out.endsWith('\n')) process.stdout.write('\n');
     return 0;
   } catch (err) {
     console.error(`Network error: ${err instanceof Error ? err.message : String(err)}`);
