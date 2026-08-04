@@ -14,7 +14,7 @@ const HEURISTIC_NOTE =
 const webmcp: Check = {
   ...META,
   defaultEnabled: true,
-  scored: true,
+  scored: false,
 
   async run(target, http): Promise<CheckResult> {
     const wkUrl = new URL('/.well-known/webmcp', target.origin).toString();
@@ -45,14 +45,14 @@ const webmcp: Check = {
     };
 
     if (res.status !== 200) {
-      return makeResult(META, 'fail', `Root URL returned HTTP ${res.status} (no manifest, no HTML to scan)`, evidence);
+      return makeResult(META, 'warn', `Root URL returned HTTP ${res.status} (runtime detection requires --browser)`, evidence);
     }
 
     if (/navigator\.modelContext/.test(bodyText)) {
       return makeResult(META, 'pass', 'navigator.modelContext usage detected in root HTML (heuristic)', evidence);
     }
 
-    return makeResult(META, 'fail', 'No /.well-known/webmcp manifest and no navigator.modelContext usage in root HTML', evidence);
+    return makeResult(META, 'warn', 'Fetch-only scan found no WebMCP signal; use --browser for runtime detection', evidence);
   },
 };
 

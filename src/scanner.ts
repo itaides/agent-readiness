@@ -7,10 +7,13 @@ import type {
   HttpClient,
   Report,
   Target,
+  CheckRunOptions,
 } from './types';
+import { addRemediation } from './remediation';
 
 export interface ScanOptions {
   concurrency: number;
+  checkOptions?: Partial<CheckRunOptions>;
 }
 
 export async function scan(
@@ -20,11 +23,15 @@ export async function scan(
   opts: ScanOptions,
 ): Promise<Report> {
   const limit = pLimit(opts.concurrency);
-  const results = await Promise.all(
+  const checkOptions: CheckRunOptions = {
+    verifySkillDigests: false,
+    ...opts.checkOptions,
+  };
+  const rawResults = await Promise.all(
     checks.map((c) =>
       limit(async (): Promise<CheckResult> => {
         try {
-          return await c.run(target, http);
+          return await c.run(target, http, checkOptions);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           return {
@@ -40,28 +47,31 @@ export async function scan(
       }),
     ),
   );
+  const results = rawResults.map((result) => addRemediation(result, target.origin.toString()));
 
   return {
     version: 1,
     target: target.origin.toString(),
     scannedAt: new Date().toISOString(),
     tool: { name: 'agent-readiness', version: '0.0.1' },
-    summary: buildSummary(results),
+    summary: buildSummary(results, checks),
     checks: results,
   };
 }
 
-const SCORED_CATEGORIES: Array<Exclude<Category, 'commerce'>> = [
+const CATEGORIES: Category[] = [
   'discoverability',
   'content',
   'bot-access',
   'capabilities',
+  'commerce',
 ];
 
-function buildSummary(results: CheckResult[]): Report['summary'] {
+function buildSummary(results: CheckResult[], checks: Check[]): Report['summary'] {
   const summary = {} as Report['summary'];
-  for (const cat of SCORED_CATEGORIES) {
-    const inCat = results.filter((r) => r.category === cat);
+  const scoredIds = new Set(checks.filter((check) => check.scored).map((check) => check.id));
+  for (const cat of CATEGORIES) {
+    const inCat = results.filter((r) => r.category === cat && scoredIds.has(r.id) && (r.status === 'pass' || r.status === 'fail'));
     summary[cat] = {
       pass: inCat.filter((r) => r.status === 'pass').length,
       fail: inCat.filter((r) => r.status === 'fail').length,
