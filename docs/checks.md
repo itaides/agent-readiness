@@ -133,6 +133,12 @@ Requests the paid resource without payment. Requires HTTP 402 and at least one `
 
 Without `--baseline`, completed scans exit 0 even when checks fail. Network/target errors exit 2 and uncaught tool errors exit 3.
 
+## Remediation guidance
+
+Every `fail` or `warn` result includes structured remediation with a concise suggestion and a target-specific command that reruns only that check. Human, Markdown, and HTML reports render this guidance directly; JSON includes it under `checks[].remediation`. Where a longer coding-agent prompt exists, `promptPath` points to its packaged file under `prompts/`.
+
+Guidance is capability-aware: optional protocols are phrased as conditional recommendations, informational drafts remain low priority, bot policy suggestions preserve the site owner's allow/block decision, and commerce verification never submits payment or credentials.
+
 ## Inventory
 
 | Category | Available | Default | Scored by default |

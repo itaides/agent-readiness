@@ -9,6 +9,7 @@ import type {
   Target,
   CheckRunOptions,
 } from './types';
+import { addRemediation } from './remediation';
 
 export interface ScanOptions {
   concurrency: number;
@@ -26,7 +27,7 @@ export async function scan(
     verifySkillDigests: false,
     ...opts.checkOptions,
   };
-  const results = await Promise.all(
+  const rawResults = await Promise.all(
     checks.map((c) =>
       limit(async (): Promise<CheckResult> => {
         try {
@@ -46,6 +47,7 @@ export async function scan(
       }),
     ),
   );
+  const results = rawResults.map((result) => addRemediation(result, target.origin.toString()));
 
   return {
     version: 1,

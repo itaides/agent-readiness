@@ -40,6 +40,11 @@ export interface CheckResult {
   spec: { url: string; asOf: string };
   evidence: Evidence;
   remediationPromptPath?: string;
+  remediation?: {
+    suggestion: string;
+    promptPath?: string;
+    verifyCommand: string;
+  };
 }
 
 export interface Check {

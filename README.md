@@ -142,6 +142,14 @@ JSON output is pipeable and diffable:
 agent-readiness https://example.com --format json | jq '.summary'
 ```
 
+Failed and warning checks include a concise **how-to-fix suggestion** plus a target-specific verification command. JSON exposes the same information as structured `remediation` data, and the `prompts/` package contains longer copy-ready implementation prompts:
+
+```text
+FAIL  Markdown content negotiation — content-type "text/html" is not text/markdown
+      FIX     Return Markdown plus Content-Type: text/markdown and Vary: Accept...
+      VERIFY  agent-readiness https://example.com/ --only markdown-negotiation
+```
+
 HTML output is a single self-contained file — inline CSS, no external assets, dark-mode-aware — ready to open in a browser, attach to a PR comment, or drop into a dashboard:
 
 ```sh
