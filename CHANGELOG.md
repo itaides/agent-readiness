@@ -16,6 +16,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Runtime agent audit**: optional Lighthouse Agentic Browsing integration via `--browser`; remains informational while Chrome marks the category experimental.
 - **CI regression gates**: `--baseline <report.json>` exits 1 only for pass→fail transitions and newly introduced failures.
 - **Actionable remediation**: every failed or warning check now reports a concise fix, a target-specific one-check verification command, structured JSON guidance, and an optional copy-ready prompt path.
+- **Contributor guide**: added `CONTRIBUTING.md` with check acceptance criteria, safety and privacy requirements, remediation guidance, validation commands, and a pull request checklist.
 - **Maintenance tooling**: working `audit:specs` script, copy-ready remediation prompts, and a dated [`docs/roadmap.md`](docs/roadmap.md) with ACP/AP2 watch items.
 - **Output formats**: `--format human` (default), `json`, `html`, `md`.
   - `html` produces a single self-contained file — inline CSS, no external assets, dark-mode-aware via `prefers-color-scheme`, evidence collapsible per check ([#2](https://github.com/itaides/agent-readiness/pull/2))

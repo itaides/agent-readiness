@@ -248,6 +248,12 @@ Adding a new check:
 
 ---
 
+## Contributing
+
+Contributions are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, check acceptance criteria, remediation requirements, safety boundaries, validation commands, and the pull request checklist.
+
+---
+
 ## License
 
 [MIT](LICENSE). Inspired by [isitagentready.com](https://isitagentready.com) and the [Cloudflare agent-readiness blog post](https://blog.cloudflare.com/agent-readiness/). Independent open-source implementation — not affiliated with Cloudflare.
