@@ -38,8 +38,38 @@ const LLMS_TXT = `# Fixture Site
 `;
 
 const AGENT_SKILLS = {
+  $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
   skills: [
-    { name: 'search', title: 'Search', description: 'Search docs' },
+    {
+      name: 'search',
+      type: 'skill-md',
+      description: 'Search fixture docs',
+      url: '/.well-known/agent-skills/search/SKILL.md',
+      digest: 'sha256:a617f064ccc65d7426d73f7b4221811ee3801f38b156560c54c49ec064e438a6',
+    },
+  ],
+};
+
+const SKILL_MD = `---
+name: search
+description: Search fixture docs
+---
+
+# Search
+`;
+
+const A2A_CARD = {
+  name: 'fixture-agent',
+  description: 'Fixture A2A agent',
+  version: '1.0.0',
+  supportedInterfaces: [
+    { url: 'http://127.0.0.1/a2a', protocolBinding: 'JSONRPC', protocolVersion: '1.0' },
+  ],
+  capabilities: { streaming: false },
+  defaultInputModes: ['text/plain'],
+  defaultOutputModes: ['text/plain'],
+  skills: [
+    { id: 'search', name: 'Search', description: 'Search fixture docs', tags: ['search'] },
   ],
 };
 
@@ -74,6 +104,13 @@ const WEB_BOT_AUTH = {
 
 const MARKDOWN_PAGE = `# Article 1\n\nFixture markdown content used to satisfy markdown-negotiation.\n`;
 
+const AUTH_MD = `# auth.md
+
+## Discover
+
+Fetch /.well-known/oauth-protected-resource before registering.
+`;
+
 function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string): void {
   const accept = req.headers.accept ?? '';
   const url = req.url ?? '/';
@@ -87,6 +124,7 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
     res.writeHead(200, {
       'content-type': 'text/html; charset=utf-8',
       link: '</.well-known/api-catalog>; rel="api-catalog"',
+      'content-signal': 'ai-train=no, search=yes, ai-input=yes',
     });
     res.end('<!doctype html><html><body><h1>Fixture</h1><script>navigator.modelContext.registerTool({name:"x"});</script></body></html>');
     return;
@@ -109,6 +147,21 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
   if (url === '/.well-known/agent-skills/index.json') {
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify(AGENT_SKILLS));
+    return;
+  }
+  if (url === '/.well-known/agent-skills/search/SKILL.md') {
+    res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
+    res.end(SKILL_MD);
+    return;
+  }
+  if (url === '/.well-known/agent-card.json') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(A2A_CARD));
+    return;
+  }
+  if (url === '/auth.md') {
+    res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
+    res.end(AUTH_MD);
     return;
   }
   if (url === '/.well-known/api-catalog') {

@@ -40,6 +40,11 @@ export interface CheckResult {
   spec: { url: string; asOf: string };
   evidence: Evidence;
   remediationPromptPath?: string;
+  remediation?: {
+    suggestion: string;
+    promptPath?: string;
+    verifyCommand: string;
+  };
 }
 
 export interface Check {
@@ -49,7 +54,13 @@ export interface Check {
   spec: { url: string; asOf: string };
   defaultEnabled: boolean;
   scored: boolean;
-  run(target: Target, http: HttpClient): Promise<CheckResult>;
+  run(target: Target, http: HttpClient, options?: CheckRunOptions): Promise<CheckResult>;
+}
+
+export interface CheckRunOptions {
+  commerceUrl?: URL;
+  mcpUrl?: URL;
+  verifySkillDigests: boolean;
 }
 
 export interface HttpResponse {
@@ -62,7 +73,11 @@ export interface HttpResponse {
 }
 
 export interface HttpClient {
-  fetch(url: string, init?: { method?: string; headers?: Record<string, string> }): Promise<HttpResponse>;
+  fetch(url: string, init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+  }): Promise<HttpResponse>;
 }
 
 export interface CategorySummary {
@@ -76,6 +91,6 @@ export interface Report {
   target: string;
   scannedAt: string;
   tool: { name: string; version: string };
-  summary: Record<Exclude<Category, 'commerce'>, CategorySummary>;
+  summary: Record<Category, CategorySummary>;
   checks: CheckResult[];
 }
