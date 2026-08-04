@@ -21,4 +21,8 @@ Findings about *target websites* you scan are not vulnerabilities in this tool â
 - Redirect cap (5 hops) prevents redirect-chain DoS.
 - Strict response shape validation (content-type + JSON parse + required-field check) prevents false positives from SPA-fallthrough servers.
 - `--insecure` is automatically enabled only for loopback/RFC1918/ULA hosts and explicit user opt-in. Public hosts get strict TLS verification.
-- No `eval`, no dynamic `require`, no remote code loading.
+- Commerce checks observe only the initial challenge, never pay, and skip local/private targets.
+- MCP discovery invokes only `server/discover`; it never calls a tool, prompt, or resource.
+- Agent Skills artifact fetching is explicit through `--verify-skill-digests` and checks the advertised SHA-256 digest.
+- Browser execution is explicit through `--browser` and uses the locally installed Lighthouse/Chrome binaries.
+- No `eval` and no remotely loaded executable code.

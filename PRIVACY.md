@@ -1,40 +1,48 @@
 # Privacy
 
-`agent-readiness` is a local-first CLI. It collects no data, reports no usage, and contacts no third-party services.
+`agent-readiness` is a local-first CLI. It collects no analytics, sends no telemetry, performs no update check, and has no service account.
 
-## What network traffic the tool makes
+## Default network traffic
 
-When you run `agent-readiness <url>`, the tool issues HTTP requests **only** to the URL you provide and (depending on which checks are enabled) standard paths beneath that origin:
+The default scan contacts the supplied origin and standard paths below it:
 
-- `<origin>/robots.txt`
-- `<origin>/sitemap.xml`
-- `<origin>/llms.txt` (only if `--include-llms-txt` is passed)
-- `<origin>/.well-known/agent-skills/index.json`
-- `<origin>/.well-known/api-catalog`
-- `<origin>/.well-known/oauth-authorization-server`
-- `<origin>/.well-known/oauth-protected-resource`
-- `<origin>/.well-known/mcp/server-card.json`
-- `<origin>/.well-known/http-message-signatures-directory`
-- `<origin>/.well-known/webmcp`
-- `<origin>/` (root, for Link header and WebMCP heuristic)
-- `<contentUrl>` (for Markdown content negotiation; defaults to your input URL)
+- `/`, `/robots.txt`, and `/sitemap.xml`;
+- `/.well-known/agent-card.json`;
+- `/.well-known/agent-skills/index.json`;
+- `/.well-known/api-catalog`;
+- `/.well-known/oauth-authorization-server`;
+- `/.well-known/oauth-protected-resource`;
+- `/.well-known/mcp/server-card.json`;
+- `/.well-known/http-message-signatures-directory`;
+- `/.well-known/webmcp`;
+- the input URL or explicit `--content-url` for Markdown negotiation and response-header checks.
 
-If a redirect is encountered, the tool follows up to 5 hops within the same protocol/host policy.
+It also asks the operating system's configured DNS resolver for `_index._agents.<target-host>` unless the target is local/private. Redirects are followed up to five hops. A sitemap URL advertised by the target may point to another origin.
 
-## What network traffic the tool does NOT make
+## Explicit network expansion
 
-- No analytics or telemetry endpoint.
-- No update check ("phone home").
-- No third-party CDN for assets at runtime.
-- No DNS resolution of anything you did not ask the tool to scan.
+These flags deliberately broaden the scan:
+
+- `--include-llms-txt` requests `/llms.txt`.
+- `--include-auth-md` requests `/auth.md`.
+- `--verify-skill-digests` fetches HTTP(S) artifact URLs advertised by the target's Agent Skills index; those URLs may be on other origins.
+- `--mcp-url` sends one read-only `server/discover` request to that URL.
+- `--commerce-url` requests the supplied paid resource and `/.well-known/ucp` on that resource's origin. It does not send money, credentials, or a payment retry.
+- `--browser` launches local Lighthouse/Chrome against the content URL. The page may load any subresources, analytics, or third-party scripts it normally loads in a browser.
+
+The tool never calls Cloudflare, WorkOS, Chrome, x402, UCP, MPP, or MCP services merely because their specifications are checked.
+
+## Headers and credentials
+
+`--header`, `--cookie`, and `--user-agent` are explicit user controls. Configured headers are sent by the shared HTTP client on its requests, including followed redirects, so do not provide sensitive credentials when scanning a target that redirects to an untrusted origin. Browser mode does not copy CLI headers or cookies into Chrome.
 
 ## Data storage
 
-The tool does not write any files unless you pass `--output`. There is no cache, no history, no persistent state on disk. Every invocation is stateless.
+The CLI does not maintain a cache, history, or telemetry state. JSON/HTML/Markdown reports are written only when you redirect stdout. `--baseline` reads the file you name. Lighthouse output is captured in memory and is not persisted by this tool.
 
 ## Verifying
 
-The code in this repository is the code that runs on your machine. The published binary is a single bundled file produced by `bun build src/cli.ts` — you can rebuild it yourself and compare:
+The published CLI is built from this repository:
 
 ```sh
 bun install
@@ -42,13 +50,8 @@ bun run build
 shasum -a 256 dist/cli.js
 ```
 
-There is no minified, obfuscated, or remotely-loaded code path.
+## Target logging
 
-## Out of scope
+Targets and their dependencies may log scan traffic. The default User-Agent identifies the tool. If you spoof another agent or provide credentials, you are responsible for the resulting access and logs.
 
-- The websites you scan may log your request. That is between you and the target site. `agent-readiness` sends a documented User-Agent string by default (`agent-readiness/<version> (+https://github.com/itaides/agent-readiness)`) so target operators can identify it.
-- If you set `--user-agent <ua>` to spoof another bot (e.g. `GPTBot/1.0`), you take responsibility for any logging or filtering that may follow.
-
-## Questions
-
-Open an issue at https://github.com/itaides/agent-readiness/issues.
+Questions and corrections are welcome at https://github.com/itaides/agent-readiness/issues.

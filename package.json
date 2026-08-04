@@ -1,7 +1,7 @@
 {
   "name": "agent-readiness",
   "version": "0.0.1",
-  "description": "CLI that checks whether a website is ready for AI agents — locally or in production. Same checks as isitagentready.com, runs against localhost.",
+  "description": "CLI that checks whether a website is ready for AI agents — locally, in CI, or in production.",
   "license": "MIT",
   "type": "module",
   "homepage": "https://github.com/itaides/agent-readiness",

@@ -14,20 +14,22 @@ const http = createHttpClient({
 });
 
 describe('e2e against fixture server', () => {
-  it('all 13 checks pass against the all-pass fixture (with --include-llms-txt)', async () => {
+  it('all scored checks pass against the all-pass fixture', async () => {
     const fixture = await startFixtureServer('all-pass');
     try {
       const target = createTarget({ url: fixture.url });
-      const report = await scan(target, checks, http, { concurrency: 4 });
+      const selected = checks.filter((check) => check.defaultEnabled || check.id === 'llms-txt');
+      const report = await scan(target, selected, http, { concurrency: 4 });
 
-      const failures = report.checks.filter((c) => c.status !== 'pass');
+      const failures = report.checks.filter((c) => c.status === 'fail' || c.status === 'warn');
       if (failures.length) {
         for (const f of failures) {
           console.error(`FAIL ${f.id}: ${f.message}`);
         }
       }
       expect(failures).toEqual([]);
-      expect(report.checks.length).toBe(14);
+      expect(report.checks.find((check) => check.id === 'dns-aid')?.status).toBe('skip');
+      expect(report.checks.length).toBe(17);
 
       expect(report.summary.discoverability.pass).toBe(3);
       expect(report.summary.content.pass).toBe(2);
@@ -52,7 +54,7 @@ describe('e2e against fixture server', () => {
         }
       }
       expect(passes).toEqual([]);
-      expect(report.checks.length).toBe(13);
+      expect(report.checks.length).toBe(16);
     } finally {
       await fixture.close();
     }

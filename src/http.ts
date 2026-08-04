@@ -20,13 +20,14 @@ export function createHttpClient(opts: HttpClientOptions): HttpClient {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   }
 
-  async function singleFetch(url: string, init: { method: string; headers: Record<string, string> }) {
+  async function singleFetch(url: string, init: { method: string; headers: Record<string, string>; body?: string }) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
     try {
       return await fetch(url, {
         method: init.method,
         headers: init.headers,
+        body: init.body,
         redirect: 'manual',
         signal: controller.signal,
       });
@@ -49,7 +50,7 @@ export function createHttpClient(opts: HttpClientOptions): HttpClient {
       let res: Response | null = null;
 
       for (let i = 0; i <= maxRedirects; i++) {
-        res = await singleFetch(currentUrl, { method, headers });
+        res = await singleFetch(currentUrl, { method, headers, body: init.body });
         const loc = res.headers.get('location');
         if (res.status >= 300 && res.status < 400 && loc) {
           if (i === maxRedirects) break;

@@ -13,10 +13,12 @@ export function formatHuman(report: Report): string {
   lines.push(`scanned          ${report.scannedAt}`);
   lines.push('');
 
-  const cats = Object.keys(report.summary) as Array<keyof typeof report.summary>;
+  const cats = (Object.keys(report.summary) as Array<keyof typeof report.summary>)
+    .filter((cat) => report.checks.some((check) => check.category === cat));
   for (const cat of cats) {
     const s = report.summary[cat];
-    lines.push(`[${cat}] ${s.pass}/${s.total} passing`);
+    const score = s.total > 0 ? `${s.pass}/${s.total} passing` : 'informational';
+    lines.push(`[${cat}] ${score}`);
     const checks = report.checks.filter((c) => c.category === cat);
     for (const c of checks) {
       lines.push(`  ${ICON[c.status]}  ${c.title} — ${c.message}`);
@@ -46,12 +48,14 @@ export function formatHtml(report: Report): string {
   const scannedAt = escapeHtml(report.scannedAt);
   const toolLabel = `${escapeHtml(report.tool.name)} ${escapeHtml(report.tool.version)}`;
 
-  const cats = Object.keys(report.summary) as Array<keyof typeof report.summary>;
+  const cats = (Object.keys(report.summary) as Array<keyof typeof report.summary>)
+    .filter((cat) => report.checks.some((check) => check.category === cat));
 
   const summaryCards = cats
     .map((cat) => {
       const s = report.summary[cat];
-      return `<div class="card"><h3>${escapeHtml(cat)}</h3><div class="score">${s.pass}<span class="total">/${s.total}</span></div></div>`;
+      const score = s.total > 0 ? `${s.pass}<span class="total">/${s.total}</span>` : '<span class="total">info</span>';
+      return `<div class="card"><h3>${escapeHtml(cat)}</h3><div class="score">${score}</div></div>`;
     })
     .join('');
 
@@ -101,10 +105,11 @@ export function formatMarkdown(report: Report): string {
 
   lines.push('| Category | Passing |');
   lines.push('|---|---|');
-  const cats = Object.keys(report.summary) as Array<keyof typeof report.summary>;
+  const cats = (Object.keys(report.summary) as Array<keyof typeof report.summary>)
+    .filter((cat) => report.checks.some((check) => check.category === cat));
   for (const cat of cats) {
     const s = report.summary[cat];
-    lines.push(`| ${cat} | ${s.pass}/${s.total} |`);
+    lines.push(`| ${cat} | ${s.total > 0 ? `${s.pass}/${s.total}` : 'informational'} |`);
   }
   lines.push('');
 

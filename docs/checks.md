@@ -1,324 +1,147 @@
 # Agent Readiness — Checks Specification
 
-This document is the source of truth for every check the tool performs. Each entry in `src/checks/<id>.ts` implements what is declared here. Reviewers should compare implementation to this spec, not infer behavior from code.
+This is the source of truth for the CLI's externally observable pass criteria. Every check records the linked source and the date it was last reviewed. Draft and runtime-dependent checks are informational and do not affect category totals.
 
-## Target model
+## Scan model
 
-The tool's input is a single URL. From it we derive:
+- Origin checks derive scheme, host, and port from the input URL.
+- Content checks use the input URL or `--content-url`.
+- Commerce checks run only when `--commerce-url` is provided and are skipped for loopback/RFC1918/IPv6 ULA targets.
+- `--preset content|api|commerce` narrows the scan to the relevant surface; the commerce preset still requires `--commerce-url`.
+- MCP discovery runs only when `--mcp-url` is provided.
+- Browser audits run only with `--browser` and require Lighthouse 13.3+, Node, and Chrome 150+.
+- HTTP follows up to five redirects, reads at most 5 MB per response, and defaults to a five-second per-request timeout.
+- JSON endpoints must return HTTP 200, a JSON-compatible content type, parseable JSON, and the required shape. A `200 text/html` SPA fallback fails.
 
-- `origin: URL` — scheme + host + port. Origin-scoped checks fetch paths under it.
-- `contentUrl: URL` — defaults to the user-supplied URL; can be overridden with `--content-url`. Used only by `markdown-negotiation`.
+Statuses are `pass`, `fail`, `warn`, and `skip`. Only checks marked **scored** contribute to category totals. Informational checks use warnings for absence or inconclusive detection.
 
-If the input URL has no path, `contentUrl` falls back (in order) to: the first URL in `sitemap.xml`, then the root URL with `evidence.note: "fallback to root"`.
+## Discoverability
 
-## Redirect policy
+### `robots-txt` — scored, default
 
-The HTTP client follows up to 5 redirects per request. `evidence.response.finalUrl` records the resolved URL. If any redirect occurred, `evidence.note` is appended with `Followed N redirect(s): <chain>`.
+`GET /robots.txt`. Passes on HTTP 200, an absent content type or `text/plain`, and at least one `User-agent:` directive. Source: [RFC 9309](https://datatracker.ietf.org/doc/html/rfc9309).
 
-For per-URL checks (Link header on root, markdown-negotiation on contentUrl), evaluation runs against the **final** URL after redirects.
+### `sitemap` — scored, default
 
-## Locality detection
+`GET /sitemap.xml`; if unavailable, follows the first `Sitemap:` URL in `robots.txt`. Passes on HTTP 200, an XML content type, and a body beginning with an XML declaration, `urlset`, or `sitemapindex`. Source: [Sitemaps protocol](https://www.sitemaps.org/protocol.html).
 
-`Target.isLocal = true` iff the resolved host is in one of:
+### `link-header-api-catalog` — scored, default
 
-- 127.0.0.0/8 (IPv4 loopback)
-- 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (RFC 1918)
-- ::1 (IPv6 loopback)
-- fc00::/7 (IPv6 ULA)
-- Host literal `localhost`
+`GET /`. Passes when the response contains a `Link` header with `rel="api-catalog"`. Source: [RFC 8288](https://datatracker.ietf.org/doc/html/rfc8288).
 
-When `isLocal = true`:
+### `dns-aid` — informational, default
 
-- TLS verification is disabled (equivalent to `--insecure`).
-- `commerce`-category checks (future v2) are returned with `status: skip`.
-- No other behavioral change.
+Queries SVCB/HTTPS at `_index._agents.<hostname>`. Passes when at least one service record exists, warns when absent, and skips local/private targets. Node/Bun's resolver API does not expose the DNSSEC AD bit, so evidence explicitly reports DNSSEC as unknown. Source: [DNS-AID Internet-Draft](https://datatracker.ietf.org/doc/draft-mozleywilliams-dnsop-dnsaid/).
 
-## Exit codes
+## Content
 
-| Condition                                          | Exit |
-|----------------------------------------------------|------|
-| Scan completed, no `--baseline`                    | 0    |
-| Scan completed, `--baseline`, no regression        | 0    |
-| Scan completed, `--baseline`, at least 1 regression| 1    |
-| Network error or invalid target URL                | 2    |
-| Internal error (tool bug)                          | 3    |
+### `markdown-negotiation` — scored, default
 
-Exit 1 from failing checks is deliberately *not* used in default mode. The tool reports; CI opts in to gating via `--baseline`.
+Requests the content URL with `Accept: text/markdown`. Passes on HTTP 200, `text/markdown`, a non-empty body, and content that does not look like HTML. Source: [Cloudflare Markdown for Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/).
 
-## Baseline-diff semantics
+### `llms-txt` — scored, opt-in
 
-`--baseline <path>` loads a previous JSON report and compares to the current report.
+Enabled with `--include-llms-txt` or `--only llms-txt`. `GET /llms.txt` must return HTTP 200 as `text/plain` or `text/markdown`, be non-empty, and contain an H1. Source: [llms.txt proposal](https://llmstxt.org/).
 
-Definitions:
+## Bot access and content policy
 
-- **Regression**: a check that was `pass` is now `fail`. Counts toward exit 1.
-- **Improvement**: a check that was `fail` is now `pass`. Does not affect exit.
-- **New check** (present in current, absent from baseline):
-  - Currently `fail` → counts as a regression (the tool got smarter; your site didn't).
-  - Currently `pass` → counts as an improvement.
-- **Removed check** (present in baseline, absent from current report): dropped from the diff with a stderr warning.
-- **Target mismatch** (baseline target URL ≠ current target): hard error, exit 2.
-- **Evidence-only change** (same status, different evidence or message): ignored.
+### `content-signal` — scored, default
 
-## Check contract
+Checks both `Content-Signal:` directives in `robots.txt` and the `Content-Signal` header on the content response. Core values `search`, `ai-input`, and `ai-train` accept only `yes`/`no`; the optional `use` extension accepts `immediate`, `reference`, or `full`. Path-scoped robots directives are supported. The score measures a valid explicit policy, not whether it allows or denies use. Sources: [Content Signals](https://contentsignals.org/) and [Cloudflare header behavior](https://developers.cloudflare.com/changelog/post/2026-07-13-markdown-for-agents-header-preservation/).
 
-Every check is identified by a stable kebab-case `id`. Each check:
+### `ai-bot-rules` — scored, default
 
-1. Receives `Target` and `HttpClient`.
-2. Issues one or more HTTP requests.
-3. Returns a `CheckResult` with `status` ∈ {`pass`, `fail`, `warn`, `skip`} and evidence describing what was observed.
+Passes when `robots.txt` explicitly names at least one known AI crawler or user-directed agent. It does not score the allow/block stance. The maintained names cover OpenAI, Anthropic, Perplexity, Google, Apple, Meta, Amazon, Common Crawl, ByteDance, and Cohere agents.
 
-A check returns `fail` (does not throw) on error. The scanner catches exceptions and converts them to `fail` with `message: "Internal error: …"`.
+### `bot-policy-matrix` — informational, default
 
-### Universal shape validation
+Reports explicit `robots.txt` stance for Cloudflare's current Search, Agent, and Training behavior buckets. Warns when none of the mapped bots has an explicit group. It is a policy inventory, not a recommendation to allow or block a category. Source: [Cloudflare Verified bots taxonomy](https://developers.cloudflare.com/bots/concepts/bot/verified-bots/).
 
-Any check that expects a JSON body MUST:
+### `web-bot-auth` — scored, default
 
-1. Verify HTTP status is 200.
-2. Verify response content-type matches `application/json` (or `application/<thing>+json`).
-3. Parse the body as JSON; fail on parse error.
-4. Validate at least the documented required fields are present.
+`GET /.well-known/http-message-signatures-directory`. Accepts a top-level key array or `{ "keys": [...] }`; at least one entry must look JWK-like via `kid` or `kty`. Source: [HTTP Message Signatures draft](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/).
 
-Failing any of (1)–(4) → `status: fail` with a message naming the specific failure.
+## Capabilities
 
-This defends against SPA dev servers returning 200 + `text/html` for unknown paths — the dominant local-dev failure mode.
+### `a2a-agent-card` — scored, default
 
----
+`GET /.well-known/agent-card.json`. Validates the current A2A required fields: non-empty name/description/version, capabilities object, supported interfaces, default input/output modes, and skills. Interfaces need URL, protocol binding, and protocol version; skills need ID, name, description, and tags. Source: [A2A specification](https://a2a-protocol.org/dev/specification/).
 
-## The Checks — v1: 13 scored
+### `agent-skills` — scored, default
 
-Cut from v1, deferred to future work: `x402`, `ucp`, `acp`. The methodologies for detecting these standards from outside are not specified well enough to implement without guessing. Re-add when the specs are stable and the detection endpoints are documented.
+`GET /.well-known/agent-skills/index.json`. Requires the v0.2 schema URI and a non-empty skills array. Every entry needs a valid unique name, `skill-md` or `archive` type, 1–1024 character description, URL, and lowercase SHA-256 digest. `--verify-skill-digests` also fetches each advertised HTTP(S) artifact and compares its bytes to the digest. Source: [Cloudflare Agent Skills discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc).
 
-### Discoverability
+### `api-catalog` — scored, default
 
-#### `robots-txt`
+`GET /.well-known/api-catalog`. Accepts an RFC 9727 linkset array or `{ "linkset": [...] }`. Source: [RFC 9727](https://datatracker.ietf.org/doc/html/rfc9727).
 
-- **Title**: robots.txt
-- **Spec**: https://datatracker.ietf.org/doc/html/rfc9309 (asOf: 2026-04-17)
-- **Request**: `GET <origin>/robots.txt`
-- **Pass criteria**:
-  - HTTP status 200.
-  - Content-type starts with `text/plain` (or is empty/missing, which RFC 9309 permits).
-  - Body parses successfully with `robots-parser`.
-  - Body contains at least one `User-agent:` line.
-- **Evidence**: status, content-type, byte count, group count.
-- **Caches body** for `content-signal` and `ai-bot-rules` to reuse.
-
-#### `sitemap`
-
-- **Title**: sitemap.xml
-- **Spec**: https://www.sitemaps.org/protocol.html (asOf: 2026-04-17)
-- **Request**: `GET <origin>/sitemap.xml`. On 404, retry against the first `Sitemap:` directive found in robots.txt (if available).
-- **Pass criteria**: 200 + content-type contains `xml` + body opens with `<?xml`, `<urlset`, or `<sitemapindex`.
-- **Evidence**: status, content-type, byte count, source (`well-known` or `robots-discovered`).
-
-#### `link-header-api-catalog`
-
-- **Title**: Link header advertising api-catalog (RFC 8288)
-- **Spec**: https://datatracker.ietf.org/doc/html/rfc8288 (asOf: 2026-04-17)
-- **Request**: `GET <origin>/`
-- **Pass criteria**: Response includes a `Link:` header containing `rel="api-catalog"` (case-insensitive).
-- **Evidence**: full Link header value, or absence.
-
-### Content
-
-#### `markdown-negotiation`
-
-- **Title**: Markdown content negotiation
-- **Spec**: Cloudflare blog (asOf: 2026-04-17)
-- **Request**: `GET <contentUrl>` with `Accept: text/markdown`.
-- **Pass criteria**:
-  - Status 200.
-  - Content-type starts with `text/markdown`.
-  - Body is non-empty.
-  - Body does NOT start with `<!DOCTYPE`, `<html`, or `<HTML` (defends against servers that ignore `Accept` and mislabel content-type).
-- **Evidence**: contentUrl used, fallback note (if applicable), content-type, first 256 bytes of body.
-
-#### `llms-txt` (default-off — enable via `--include-llms-txt`)
-
-- **Title**: llms.txt
-- **Spec**: https://llmstxt.org/ (asOf: 2026-04-17)
-- **Request**: `GET <origin>/llms.txt`
-- **Pass criteria**: 200 + content-type `text/plain` or `text/markdown` + body non-empty + body contains at least one `# ` section header.
-- **Evidence**: status, content-type, byte count, first H1 line.
-
-### Bot Access Control
-
-#### `content-signal`
-
-- **Title**: Content-Signal directive in robots.txt
-- **Spec**: Cloudflare blog (asOf: 2026-04-17)
-- **Reuses** the robots.txt body from `robots-txt`.
-- **Pass criteria**: At least one line matching `Content-Signal:` (case-insensitive) with at least one recognized signal: `ai-train`, `ai-input`, `search`. Unknown signals are ignored.
-- **Evidence**: matched directive lines verbatim.
-
-#### `ai-bot-rules`
-
-- **Title**: AI bot rules in robots.txt
-- **Spec**: Cloudflare blog (asOf: 2026-04-17)
-- **Reuses** the robots.txt body from `robots-txt`.
-- **Pass criteria**: robots.txt contains at least one `User-agent:` line whose value matches one of these (case-insensitive substring match):
-  - `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`
-  - `ClaudeBot`, `anthropic-ai`
-  - `PerplexityBot`, `Perplexity-User`
-  - `Google-Extended`
-  - `Applebot-Extended`
-  - `Bytespider`
-  - `Meta-ExternalAgent`
-  - `Amazonbot`
-  - `CCBot`
-  - `cohere-ai`
-- **Note**: the check does NOT evaluate allow/disallow stance. The presence of *any* rule for *any* AI bot is a pass — the signal is "you thought about AI bots."
-- **Evidence**: which UAs matched.
-- **Maintenance**: this list should be reviewed every 6 months. Update both the list and `spec.asOf`.
-
-#### `web-bot-auth`
-
-- **Title**: Web Bot Auth public key directory
-- **Spec**: draft-ietf-httpbis-message-signatures (asOf: 2026-04-17)
-- **Request**: `GET <origin>/.well-known/http-message-signatures-directory`
-- **Pass criteria** (shape-validated):
-  - Status 200.
-  - Content-type contains `json`.
-  - Body parses as JSON.
-  - Body has a `keys` array OR is itself a top-level array of key objects (the draft is in flux; accept either shape).
-  - At least one entry contains a `kid` or `kty` field (JWK-shaped).
-- **Evidence**: shape detected, key count.
-
-### Capabilities
-
-#### `agent-skills`
-
-- **Title**: Agent Skills index
-- **Spec**: Cloudflare proposal (asOf: 2026-04-17)
-- **Request**: `GET <origin>/.well-known/agent-skills/index.json`
-- **Pass criteria** (shape-validated):
-  - 200 + JSON content-type + parseable JSON.
-  - Body has a `skills` array OR is a top-level array, with at least one entry.
-- **Evidence**: skill count, first skill name (if available).
-
-#### `api-catalog`
-
-- **Title**: API Catalog (RFC 9727)
-- **Spec**: https://datatracker.ietf.org/doc/html/rfc9727 (asOf: 2026-04-17)
-- **Request**: `GET <origin>/.well-known/api-catalog`
-- **Pass criteria** (shape-validated):
-  - 200 + JSON content-type + parseable JSON.
-  - Body matches the RFC 9727 linkset shape: object with a `linkset` array, OR a top-level array of link descriptors.
-- **Evidence**: link count.
-
-#### `oauth-authorization-server`
-
-- **Title**: OAuth 2.0 Authorization Server Metadata (RFC 8414)
-- **Spec**: https://datatracker.ietf.org/doc/html/rfc8414 (asOf: 2026-04-17)
-- **Request**: `GET <origin>/.well-known/oauth-authorization-server`
-- **Pass criteria** (shape-validated):
-  - 200 + JSON content-type + parseable JSON.
-  - Body contains `issuer` (required by RFC 8414).
-- **Evidence**: issuer value.
-
-#### `oauth-protected-resource`
-
-- **Title**: OAuth 2.0 Protected Resource Metadata (RFC 9728)
-- **Spec**: https://datatracker.ietf.org/doc/html/rfc9728 (asOf: 2026-04-17)
-- **Request**: `GET <origin>/.well-known/oauth-protected-resource`
-- **Pass criteria** (shape-validated):
-  - 200 + JSON content-type + parseable JSON.
-  - Body contains `resource` (required by RFC 9728).
-- **Evidence**: resource value.
-
-#### `mcp-server-card`
-
-- **Title**: MCP Server Card
-- **Spec**: https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json (asOf: 2026-05-20). The MCP Server Card has **two flavors** in the wild as of mid-2026; this check accepts either.
-- **Request**: `GET <origin>/.well-known/mcp/server-card.json`
-- **Pass criteria** (shape-validated):
-  - 200 + JSON content-type + parseable JSON.
-  - Body has a `transport` field (required by both flavors).
-  - Body has `serverInfo.name` as a non-empty string (required by both flavors).
-  - If body has `protocolVersion` → reported as `v1.json` format.
-  - If body has no `protocolVersion` → reported as `SEP-1649 / server-card-v1` format.
-- **Why both flavors**: the v1.json schema referenced by the original Cloudflare blog post is the older shape with a top-level `protocolVersion`. Real-world servers (e.g. `matzarich.app`) ship the SEP-1649 / `server-card-v1` shape, which keeps `serverInfo` + `transport` but drops `protocolVersion` in favor of richer `auth`/`capabilities` blocks. Accepting only one produces false negatives on real working sites.
-- **Evidence**: server name, detected flavor, protocol version if v1.
-
-#### `webmcp`
-
-- **Title**: WebMCP
-- **Spec**: Cloudflare blog and W3C-track proposals (asOf: 2026-04-17). The detection methodology is **not stable**.
-- **Caveat (important)**: WebMCP is a runtime browser API — full detection requires executing JavaScript and observing `navigator.modelContext.registerTool()` calls on page load. This check is **fetch-only and heuristic**. A site that loads WebMCP via a separate JS bundle (the common case) will not be detected here. For ground-truth detection use isitagentready.com or a headless-browser scanner.
-- **Request**:
-  1. `GET <origin>/.well-known/webmcp` (forward-looking — if a future spec settles here).
-  2. If that returns non-JSON or non-200, fall back to `GET <origin>/` and scan the response body.
-- **Pass criteria**:
-  - Pass if step (1) returns 200 + JSON content-type + parseable JSON object.
-  - OR pass if step (2) returns 200 and the response body contains the substring `navigator.modelContext`.
-  - Otherwise fail.
-- **Evidence**: which signal matched (manifest or HTML heuristic) + a note describing the heuristic limitation.
-
----
-
-## Category totals
-
-Reports show `pass`/`fail`/`total` per category. There is **no** numeric overall score.
-
-| Category         | Scored checks | Default-enabled |
-|------------------|--------------:|----------------:|
-| discoverability  |             3 |               3 |
-| content          |             2 |               1 |
-| bot-access       |             3 |               3 |
-| capabilities     |             6 |               6 |
-| commerce         |             0 |               0 |
-| **total**        |        **14** |        **13**   |
-
-`llms-txt` is default-off. `--include-llms-txt` raises the `content` total from 1 to 2.
-
-## HTTP client posture
-
-- Max response body: 5 MB. Excess bytes truncated, check fails with clear message.
-- Default User-Agent: `agent-readiness/<version> (+https://github.com/<repo>)`. Overridable with `--user-agent`.
-- Per-request timeout: 5000 ms default, configurable with `--timeout`.
-- Concurrency: 4 in-flight requests max, configurable with `--concurrency`. Implemented with `p-limit`.
-- Cookie injection: `--cookie <string>`. Sent on every request to the target origin.
-- Header injection: `--header "K: V"` (repeatable). Sent on every request.
-- TLS: strict by default; `--insecure` skips verification; auto-on when `Target.isLocal`.
-
-## Spec staleness audit
-
-`scripts/audit-spec-staleness.ts` runs in CI weekly. Fails if any check's `spec.asOf` is more than 365 days old. Maintainers respond by re-reading the spec, updating the check if the spec changed, and bumping the date.
-
-## Output formats
-
-- `--format human` (default): grouped by category, one line per check with status icon and message.
-- `--format json`: the report shape documented below. Stable across patch versions.
-- `--format md`: markdown report suitable for PR comments.
-
-### JSON report shape
-
-```json
-{
-  "version": 1,
-  "target": "http://localhost:3000",
-  "scannedAt": "2026-05-20T14:23:00Z",
-  "tool": { "name": "agent-readiness", "version": "0.0.1" },
-  "summary": {
-    "discoverability": { "pass": 2, "fail": 1, "total": 3 },
-    "content":         { "pass": 1, "fail": 0, "total": 1 },
-    "bot-access":      { "pass": 0, "fail": 3, "total": 3 },
-    "capabilities":    { "pass": 0, "fail": 5, "total": 5 }
-  },
-  "checks": [
-    {
-      "id": "mcp-server-card",
-      "category": "capabilities",
-      "title": "MCP Server Card",
-      "status": "fail",
-      "message": "200 but content-type \"text/html\" — likely SPA fallthrough",
-      "spec": { "url": "...", "asOf": "2026-04-17" },
-      "evidence": { "request": { "method": "GET", "url": "..." }, "response": { "status": 200, "contentType": "text/html", "bytes": 412 } },
-      "remediationPromptPath": "prompts/mcp-server-card.md"
-    }
-  ]
-}
-```
-
-The top-level `version` field is the report schema version. Bumped only on breaking changes to the JSON shape.
+### `oauth-authorization-server` — scored, default
+
+`GET /.well-known/oauth-authorization-server`. Requires a non-empty `issuer`. Source: [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414).
+
+### `oauth-protected-resource` — scored, default
+
+`GET /.well-known/oauth-protected-resource`. Requires a non-empty `resource`. Source: [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728).
+
+### `mcp-server-card` — scored, default
+
+`GET /.well-known/mcp/server-card.json`. Requires `transport` and `serverInfo.name`; accepts both the older card with `protocolVersion` and the SEP-1649-style card without it. Source: [MCP Server Card schema](https://static.modelcontextprotocol.io/schemas/mcp-server-card/v1.json).
+
+### `webmcp` — informational, default
+
+Passes on a JSON object at `/.well-known/webmcp` or inline `navigator.modelContext` usage. Absence is only a warning because fetch-only inspection cannot see registrations in external JavaScript. Use `--browser` for runtime evidence.
+
+### `auth-md` — informational, opt-in
+
+Enabled with `--include-auth-md` or `--only auth-md`. `GET /auth.md` should return Markdown/plain text with an `# auth.md` heading and point to `/.well-known/oauth-protected-resource`. Warnings do not supersede the structured OAuth metadata, which remains authoritative. Source: [auth.md documentation](https://workos.com/auth-md/docs/auth-md).
+
+### `mcp-server-discover` — informational, opt-in
+
+Enabled by `--mcp-url`. Sends one read-only JSON-RPC `server/discover` request using the MCP 2026-07-28 release candidate headers and per-request metadata. Passes when the result includes `supportedVersions` and `capabilities`; it never invokes a tool, prompt, or resource. Source: [MCP draft discovery](https://modelcontextprotocol.io/specification/draft/server/discover).
+
+### `browser-agentic` — informational, opt-in
+
+Enabled by `--browser`. Runs Lighthouse's `agentic-browsing` category against the content URL and reports its pass ratio plus failed audit IDs. Failures are warnings because the category and WebMCP support are experimental and unbenchmarked. Source: [Chrome Agentic Browsing scoring](https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring).
+
+## Commerce
+
+Commerce checks activate together when `--commerce-url <paid-resource>` is supplied.
+
+### `ucp` — scored when activated
+
+`GET /.well-known/ucp`. Requires a top-level `ucp` object with a `YYYY-MM-DD` version plus object-valued `services` and `payment_handlers`. Source: [UCP specification](https://ucp.dev/specification/overview/).
+
+### `x402` — scored when activated
+
+Requests the paid resource without payment. Requires HTTP 402 and a `PAYMENT-REQUIRED` header containing valid Base64 JSON with `x402Version: 2` and a non-empty `accepts` array. The check never pays or retries. Source: [x402 HTTP 402](https://docs.x402.org/core-concepts/http-402).
+
+### `mpp` — scored when activated
+
+Requests the paid resource without payment. Requires HTTP 402 and at least one `WWW-Authenticate: Payment` challenge. The check never sends an authorization credential or payment. Source: [Machine Payments Protocol](https://mpp.dev/).
+
+## Baseline behavior
+
+`--baseline <path>` loads a prior JSON report after the current scan:
+
+- prior `pass` → current `fail`: regression, exit 1;
+- prior `fail` → current `pass`: improvement;
+- new failing check: regression;
+- new passing check: improvement;
+- removed check: warning;
+- target mismatch or invalid baseline: exit 2;
+- `warn`, `skip`, messages, and evidence do not gate CI.
+
+Without `--baseline`, completed scans exit 0 even when checks fail. Network/target errors exit 2 and uncaught tool errors exit 3.
+
+## Inventory
+
+| Category | Available | Default | Scored by default |
+|---|---:|---:|---:|
+| Discoverability | 4 | 4 | 3 |
+| Content | 2 | 1 | 1 |
+| Bot access | 4 | 4 | 3 |
+| Capabilities | 10 | 7 | 6 |
+| Commerce | 3 | 0 | 0 |
+| **Total** | **23** | **16** | **13** |
+
+`llms-txt` raises the scored total to 14. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.

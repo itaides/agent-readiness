@@ -6,24 +6,29 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Bun-based CLI scanning any URL (public or local) for **14 agent-readiness checks** across 4 categories. See [`docs/checks.md`](docs/checks.md) for endpoints, pass criteria, and spec links.
-  - Discoverability (3): `robots-txt`, `sitemap`, `link-header-api-catalog`
+- Bun-based CLI scanning any URL (public or local) for **23 agent-readiness checks** across 5 categories. See [`docs/checks.md`](docs/checks.md) for endpoints, pass criteria, scoring, and spec links.
+  - Discoverability (4): `robots-txt`, `sitemap`, `link-header-api-catalog`, `dns-aid` (informational)
   - Content (2): `markdown-negotiation`, `llms-txt` (opt-in)
-  - Bot access control (3): `content-signal`, `ai-bot-rules`, `web-bot-auth`
-  - Capabilities (6): `agent-skills`, `api-catalog`, `oauth-authorization-server`, `oauth-protected-resource`, `mcp-server-card`, `webmcp` (heuristic)
+  - Bot access control (4): `content-signal`, `ai-bot-rules`, `bot-policy-matrix` (informational), `web-bot-auth`
+  - Capabilities (10): `a2a-agent-card`, `agent-skills`, `api-catalog`, `oauth-authorization-server`, `oauth-protected-resource`, `mcp-server-card`, `webmcp`, `auth-md`, `mcp-server-discover`, `browser-agentic`
+  - Commerce (3): `ucp`, `x402`, `mpp` (activated by `--commerce-url`)
+- **Current protocol coverage**: A2A Agent Card validation, Agent Skills discovery v0.2 with optional digest verification, Content Signals response headers/path scopes/`use`, UCP discovery, x402 v2, MPP, and MCP 2026-07-28 release-candidate discovery.
+- **Runtime agent audit**: optional Lighthouse Agentic Browsing integration via `--browser`; remains informational while Chrome marks the category experimental.
+- **CI regression gates**: `--baseline <report.json>` exits 1 only for pass→fail transitions and newly introduced failures.
+- **Maintenance tooling**: working `audit:specs` script, copy-ready remediation prompts, and a dated [`docs/roadmap.md`](docs/roadmap.md) with ACP/AP2 watch items.
 - **Output formats**: `--format human` (default), `json`, `html`, `md`.
   - `html` produces a single self-contained file — inline CSS, no external assets, dark-mode-aware via `prefers-color-scheme`, evidence collapsible per check ([#2](https://github.com/itaides/agent-readiness/pull/2))
   - `md` produces a GitHub-flavored report suitable for PR comments and Slack threads ([#2](https://github.com/itaides/agent-readiness/pull/2))
-- **Check selection**: `--preset all|content|api`, `--only id1,id2,...`, `--skip id1,id2,...`, `--list-checks`, `--include-llms-txt`
+- **Check selection**: `--preset all|content|api|commerce`, `--only`, `--skip`, `--list-checks`, `--include-llms-txt`, `--include-auth-md`, `--commerce-url`, `--mcp-url`, and `--browser`.
 - **Strict response shape validation** — JSON checks reject SPA-fallthrough responses (`200` + `text/html`) and partial implementations (JSON parses but required fields missing). Catches real production bugs that naive "did we get 200?" scanners miss.
 - HTTP client: per-request timeout (5 s default), redirect cap (5 hops), body size cap (5 MB), TLS posture auto-toggled for loopback / RFC 1918 / IPv6 ULA hosts.
 - Privacy policy: no telemetry, explicit list of every URL the tool fetches ([`PRIVACY.md`](PRIVACY.md))
 - Security policy: vulnerability disclosure + hardening list ([`SECURITY.md`](SECURITY.md))
-- GitHub Actions CI: type-check, test, build, 100 KB bundle-size gate
+- GitHub Actions CI: type-check, weekly spec-date audit, test, build, 100 KB bundle-size gate
 - Issue templates: bug report and new-check proposal (the latter requires pass criteria up front)
 - One-line installer (`install.sh`) gated on bun being present
-- 11 tests (4 robots-txt unit + 5 mcp-server-card unit + 2 e2e against fixture servers) under `bun:test`, ~80 ms full suite
-- Single-file ~43 KB JS bundle built with `bun build src/cli.ts --target=node`
+- Unit and end-to-end tests under `bun:test`, including protocol shape validation and baseline semantics.
+- Single-file ~81 KB core JS bundle built with `bun build src/cli.ts --target=node`; Lighthouse is discovered at runtime and is not bundled.
 
 ### Fixed
 
@@ -31,6 +36,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Known limitations
 
-- **WebMCP** detection is heuristic. The spec genuinely requires JavaScript execution to be fully accurate, and the tool doesn't execute JS. The check tries `/.well-known/webmcp` first, then scans root HTML for `navigator.modelContext`. False negatives are possible; the limitation is named in the check's evidence note.
-- **5 checks not yet implemented**: A2A Agent Card, x402, UCP, ACP, MPP. The rule for the queue: no check ships without explicit pass criteria written into [`docs/checks.md`](docs/checks.md) first. Tracked in [#1](https://github.com/itaides/agent-readiness/issues/1).
+- **WebMCP fetch-only detection remains heuristic**, so absence is now an informational warning. `--browser` supplies Lighthouse runtime evidence when Chrome 150+ is available.
+- **DNS-AID is an Internet-Draft** and the runtime resolver does not expose DNSSEC validation state; the check remains informational and reports DNSSEC as unknown.
+- **MCP 2026-07-28 remains a release candidate**; `server/discover` is explicit and informational.
+- **ACP and AP2 remain watchlist items** because stable external discovery/pass criteria are not yet clear enough for a non-guessing scanner.
 - The published binary install path (`bun install -g github:itaides/agent-readiness`) requires the repo to be public. Currently the repo is private; the working install path is `git clone` + `bun link`.

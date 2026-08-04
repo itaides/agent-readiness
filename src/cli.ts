@@ -5,13 +5,17 @@ import { scan } from './scanner';
 import { formatHuman, formatJson, formatHtml, formatMarkdown } from './report';
 import { checks, PRESETS } from './registry';
 import type { Check } from './types';
+import { compareBaseline, loadBaseline } from './baseline';
 
-type PresetName = 'all' | 'content' | 'api';
+type PresetName = 'all' | 'content' | 'api' | 'commerce';
 
 type Format = 'human' | 'json' | 'html' | 'md';
 
 interface Args {
   url?: string;
+  contentUrl?: string;
+  commerceUrl?: string;
+  mcpUrl?: string;
   format: Format;
   timeoutMs: number;
   concurrency: number;
@@ -19,6 +23,10 @@ interface Args {
   userAgent?: string;
   headers: Record<string, string>;
   includeLlmsTxt: boolean;
+  includeAuthMd: boolean;
+  browser: boolean;
+  verifySkillDigests: boolean;
+  baseline?: string;
   preset: PresetName;
   only?: string[];
   skip?: string[];
@@ -29,17 +37,26 @@ interface Args {
 const HELP = `Usage: agent-readiness <url> [options]
 
 Options:
-  --preset all|content|api      Check group preset (default: all)
+  --preset all|content|api|commerce
+                                Check group preset (default: all)
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List all available checks and exit
   --include-llms-txt            Include the opt-in llms.txt check
+  --include-auth-md             Include the API-focused auth.md check
+  --content-url <url>           Page used for content and browser checks
+  --commerce-url <url>          Paid resource used for UCP/x402/MPP checks
+  --mcp-url <url>               MCP HTTP endpoint used for server/discover
+  --browser                     Run Lighthouse Agentic Browsing (requires Node, Lighthouse + Chrome 150+)
+  --verify-skill-digests        Fetch Agent Skills artifacts and verify SHA-256 digests
+  --baseline <report.json>      Exit 1 only when pass/fail checks regress
   --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
   --concurrency <n>             Parallel requests (default: 4)
   --insecure                    Skip TLS verification (auto-on for loopback/RFC1918)
   --user-agent <ua>             Spoof User-Agent (e.g. "GPTBot/1.0")
   --header "K: V"               Inject a request header (repeatable)
+  --cookie <value>              Send a Cookie header to the target
   --help, -h                    Show this help
 `;
 
@@ -56,6 +73,9 @@ function parseArgs(argv: string[]): Args {
     insecure: false,
     headers: {},
     includeLlmsTxt: false,
+    includeAuthMd: false,
+    browser: false,
+    verifySkillDigests: false,
     preset: 'all',
     listChecks: false,
     help: false,
@@ -70,6 +90,14 @@ function parseArgs(argv: string[]): Args {
       case '--concurrency': args.concurrency = Number(argv[++i]); break;
       case '--insecure': args.insecure = true; break;
       case '--include-llms-txt': args.includeLlmsTxt = true; break;
+      case '--include-auth-md': args.includeAuthMd = true; break;
+      case '--content-url': args.contentUrl = argv[++i]; break;
+      case '--commerce-url': args.commerceUrl = argv[++i]; break;
+      case '--mcp-url': args.mcpUrl = argv[++i]; break;
+      case '--browser': args.browser = true; break;
+      case '--verify-skill-digests': args.verifySkillDigests = true; break;
+      case '--baseline': args.baseline = argv[++i]; break;
+      case '--cookie': args.headers.Cookie = argv[++i] ?? ''; break;
       case '--user-agent': args.userAgent = argv[++i]; break;
       case '--preset': args.preset = (argv[++i] ?? 'all') as PresetName; break;
       case '--only': args.only = parseList(argv[++i]); break;
@@ -97,7 +125,17 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
     const onlySet = new Set(args.only);
     set = all.filter((c) => onlySet.has(c.id));
   } else {
-    set = all.filter((c) => c.defaultEnabled || (c.id === 'llms-txt' && args.includeLlmsTxt));
+    const explicitlyActivated = new Set<string>();
+    if (args.includeLlmsTxt) explicitlyActivated.add('llms-txt');
+    if (args.includeAuthMd) explicitlyActivated.add('auth-md');
+    if (args.browser) explicitlyActivated.add('browser-agentic');
+    if (args.commerceUrl) {
+      explicitlyActivated.add('ucp');
+      explicitlyActivated.add('x402');
+      explicitlyActivated.add('mpp');
+    }
+    if (args.mcpUrl) explicitlyActivated.add('mcp-server-discover');
+    set = all.filter((c) => c.defaultEnabled || explicitlyActivated.has(c.id));
     const presetIds = PRESETS[args.preset];
     if (presetIds !== 'all') {
       if (presetIds === undefined) warnings.push(`unknown preset: ${args.preset} (using "all")`);
@@ -145,6 +183,7 @@ function printChecksList(all: Check[]): void {
   console.log('  all       every default-enabled check');
   console.log('  content   discoverability + content + bot-access');
   console.log('  api       capabilities + bot-access + link-header');
+  console.log('  commerce  UCP + x402 + MPP (requires --commerce-url)');
 }
 
 async function main(): Promise<number> {
@@ -163,9 +202,18 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  let baselineReport;
+  if (args.baseline) {
+    try { baselineReport = await loadBaseline(args.baseline); }
+    catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      return 2;
+    }
+  }
+
   let target;
   try {
-    target = createTarget({ url: args.url, headers: args.headers });
+    target = createTarget({ url: args.url, contentUrl: args.contentUrl, headers: args.headers });
   } catch (err) {
     console.error(err instanceof Error ? err.message : String(err));
     return 2;
@@ -186,10 +234,31 @@ async function main(): Promise<number> {
   });
 
   try {
-    const report = await scan(target, selected, http, { concurrency: args.concurrency });
+    const report = await scan(target, selected, http, {
+      concurrency: args.concurrency,
+      checkOptions: {
+        commerceUrl: args.commerceUrl ? new URL(args.commerceUrl, target.origin) : undefined,
+        mcpUrl: args.mcpUrl ? new URL(args.mcpUrl, target.origin) : undefined,
+        verifySkillDigests: args.verifySkillDigests,
+      },
+    });
     const out = render(report, args.format);
     process.stdout.write(out);
     if (!out.endsWith('\n')) process.stdout.write('\n');
+    if (baselineReport) {
+      let diff;
+      try { diff = compareBaseline(baselineReport, report); }
+      catch (err) {
+        console.error(err instanceof Error ? err.message : String(err));
+        return 2;
+      }
+      for (const id of diff.removed) console.error(`warning: baseline check removed from current scan: ${id}`);
+      if (diff.improvements.length) console.error(`baseline improvements: ${diff.improvements.join(', ')}`);
+      if (diff.regressions.length) {
+        console.error(`baseline regressions: ${diff.regressions.join(', ')}`);
+        return 1;
+      }
+    }
     return 0;
   } catch (err) {
     console.error(`Network error: ${err instanceof Error ? err.message : String(err)}`);
