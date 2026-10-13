@@ -88,6 +88,17 @@ export interface CategorySummary {
   total: number;
 }
 
+export interface CrawlCheckStat {
+  pass: number;
+  warn: number;
+  fail: number;
+}
+
+export interface CrawlSummary {
+  pages: string[];
+  perCheck: Record<string, CrawlCheckStat>;
+}
+
 export interface Report {
   version: 1;
   target: string;
@@ -95,4 +106,6 @@ export interface Report {
   tool: { name: string; version: string };
   summary: Record<Category, CategorySummary>;
   checks: CheckResult[];
+  score?: { value: number; grade: string; passed: number; total: number };
+  crawl?: CrawlSummary;
 }

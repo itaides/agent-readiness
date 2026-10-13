@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/itaides/agent-readiness/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/runtime-bun%201.1%2B-black?logo=bun" alt="Bun 1.1+">
-  <img src="https://img.shields.io/badge/checks-23-blue" alt="23 checks">
+  <img src="https://img.shields.io/badge/checks-39-blue" alt="39 checks">
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
 </p>
 
@@ -68,30 +68,46 @@ agent-readiness http://localhost:3000
 
 ## What it checks
 
-23 checks across 5 categories, with unstable or runtime-dependent standards kept informational. Full pass criteria, endpoints, scoring rules, and spec references live in [`docs/checks.md`](docs/checks.md).
+39 checks across 5 categories, with unstable or runtime-dependent standards kept informational. Full pass criteria, endpoints, scoring rules, and spec references live in [`docs/checks.md`](docs/checks.md).
 
-### Discoverability (4)
+### Discoverability (6)
 - `robots.txt` ([RFC 9309](https://datatracker.ietf.org/doc/html/rfc9309))
 - `sitemap.xml` (with `robots.txt` fallback discovery)
+- Sitemap `lastmod` coverage (informational)
 - `Link` header advertising `rel="api-catalog"` ([RFC 8288](https://datatracker.ietf.org/doc/html/rfc8288))
 - DNS-AID organization index (draft, informational)
+- RSS/Atom feed discovery (informational)
 
-### Content (2)
-- Markdown content negotiation (`Accept: text/markdown`)
+### Content (11)
+- Markdown content negotiation (`Accept: text/markdown`, including `Vary: Accept` correctness)
+- Per-page `.md` markdown mirror
+- Markdown discovery link relations (informational)
 - `llms.txt` ([llmstxt.org](https://llmstxt.org/) — opt-in via `--include-llms-txt`)
+- `llms-full.txt` (opt-in via `--include-llms-txt`)
+- `sitemap.md` markdown index (informational)
+- `AGENTS.md` instruction file (opt-in via `--include-agents-md`)
+- Page-level HTML readability (SSR content, headings, metadata, text ratio)
+- JSON-LD structured data
+- Content freshness signals (informational)
+- Semantic agent-navigable controls (informational)
 
-### Bot access control (4)
+### Bot access control (7)
 - Content Signals in `robots.txt` and response headers (`ai-train`, `ai-input`, `search`, optional `use`)
 - AI bot rules in `robots.txt` — looks for User-agent lines targeting GPTBot, ClaudeBot, PerplexityBot, Google-Extended, and 10 more
 - Cloudflare-style Search / Agent / Training policy matrix (informational)
+- `X-Robots-Tag` restrictive directive detection
+- TDMRep / `ai.txt` policy signals (informational)
+- AI-bot vs browser User-Agent differential
 - Web Bot Auth key directory at `/.well-known/http-message-signatures-directory`
 
-### Capabilities (10)
+### Capabilities (12)
 - A2A Agent Card at `/.well-known/agent-card.json`
 - Agent Skills v0.2 index at `/.well-known/agent-skills/index.json`, with optional SHA-256 artifact verification
 - API Catalog at `/.well-known/api-catalog` ([RFC 9727](https://datatracker.ietf.org/doc/html/rfc9727))
 - OAuth Authorization Server Metadata ([RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414))
 - OAuth Protected Resource Metadata ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728))
+- `agents.txt` / `agents.json` capability declaration (informational)
+- OpenAPI/Swagger spec discovery at common paths
 - MCP Server Card at `/.well-known/mcp/server-card.json`
 - WebMCP (fetch-only heuristic, informational)
 - `auth.md` agent registration guidance (opt-in, informational)
@@ -119,8 +135,10 @@ agent-readiness <url> [options]
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List every check and preset, then exit
-  --include-llms-txt            Run the opt-in llms.txt check
+  --include-llms-txt            Run the opt-in llms.txt and llms-full.txt checks
   --include-auth-md             Run the API-focused auth.md check
+  --include-agents-md           Run the opt-in AGENTS.md check
+  --crawl <n>                   Sample up to n sitemap pages and aggregate page-level checks
   --content-url <url>           Page used for content and browser checks
   --commerce-url <url>          Paid resource used for UCP/x402/MPP checks
   --mcp-url <url>               MCP HTTP endpoint used for server/discover

@@ -56,7 +56,19 @@ export async function scan(
     tool: { name: 'agent-readiness', version: '0.0.1' },
     summary: buildSummary(results, checks),
     checks: results,
+    score: buildScore(results, checks),
   };
+}
+
+function buildScore(results: CheckResult[], checks: Check[]): Report['score'] {
+  const scoredIds = new Set(checks.filter((c) => c.scored).map((c) => c.id));
+  const relevant = results.filter((r) => scoredIds.has(r.id) && (r.status === 'pass' || r.status === 'fail'));
+  const total = relevant.length;
+  if (total === 0) return undefined;
+  const passed = relevant.filter((r) => r.status === 'pass').length;
+  const value = Math.round((passed / total) * 100);
+  const grade = value >= 97 ? 'A+' : value >= 90 ? 'A' : value >= 80 ? 'B' : value >= 70 ? 'C' : value >= 50 ? 'D' : 'F';
+  return { value, grade, passed, total };
 }
 
 const CATEGORIES: Category[] = [
