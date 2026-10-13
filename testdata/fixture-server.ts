@@ -150,6 +150,7 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
       'content-type': 'text/html; charset=utf-8',
       link: '</.well-known/api-catalog>; rel="api-catalog"',
       'content-signal': 'ai-train=no, search=yes, ai-input=yes',
+      'tdm-reservation': '1',
       'last-modified': 'Wed, 01 Oct 2026 00:00:00 GMT',
     });
     res.end(HTML_PAGE.replaceAll('%BASE_URL%', baseUrl));
@@ -244,8 +245,17 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
   res.end();
 }
 
-function spaFallthroughHandler(_req: IncomingMessage, res: ServerResponse): void {
-  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+function spaFallthroughHandler(req: IncomingMessage, res: ServerResponse): void {
+  const ua = req.headers['user-agent'] ?? '';
+  if (/GPTBot|ClaudeBot/i.test(ua)) {
+    res.writeHead(403, { 'content-type': 'text/plain' });
+    res.end('blocked');
+    return;
+  }
+  res.writeHead(200, {
+    'content-type': 'text/html; charset=utf-8',
+    'x-robots-tag': 'noindex',
+  });
   res.end('<!doctype html><html><body><div id="root"></div></body></html>');
 }
 

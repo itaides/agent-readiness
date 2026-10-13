@@ -101,6 +101,18 @@ Passes when `robots.txt` explicitly names at least one known AI crawler or user-
 
 Reports explicit `robots.txt` stance for Cloudflare's current Search, Agent, and Training behavior buckets. Warns when none of the mapped bots has an explicit group. It is a policy inventory, not a recommendation to allow or block a category. Source: [Cloudflare Verified bots taxonomy](https://developers.cloudflare.com/bots/concepts/bot/verified-bots/).
 
+### `x-robots-tag` — scored, default
+
+Reads `X-Robots-Tag` on the content response. Passes when absent or non-restrictive; fails on `noindex`, `nosnippet`, `noai`, `noimageai`, `none`, `unavailable_after`, or bot-scoped directives such as `GPTBot: noindex`. Source: [Robots meta tag spec](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag).
+
+### `tdmrep` — informational, default
+
+Reports any TDM policy signal: `TDM-Reservation` response header, `<meta tdm-reservation>`, `/.well-known/tdmrep.json`, or `/ai.txt`. Warns when none exist. Source: [TDMRep](https://www.w3.org/community/reports/tdmrep/CG-FINAL-tdmrep-20240510/).
+
+### `bot-ua-differential` — scored, default
+
+Fetches the content URL with a browser UA, then `GPTBot` and `ClaudeBot` UAs. Fails when a bot UA gets 401/403/429 while the browser gets 200; warns on other status or large body-size differentials; passes on identical treatment. Source: [Cloudflare verified bots](https://developers.cloudflare.com/bots/concepts/bot/verified-bots/).
+
 ### `web-bot-auth` — scored, default
 
 `GET /.well-known/http-message-signatures-directory`. Accepts a top-level key array or `{ "keys": [...] }`; at least one entry must look JWK-like via `kid` or `kty`. Source: [HTTP Message Signatures draft](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/).
@@ -197,9 +209,9 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 |---|---:|---:|---:|
 | Discoverability | 6 | 6 | 3 |
 | Content | 11 | 8 | 4 |
-| Bot access | 4 | 4 | 3 |
+| Bot access | 7 | 7 | 5 |
 | Capabilities | 12 | 9 | 7 |
 | Commerce | 3 | 0 | 0 |
-| **Total** | **36** | **27** | **18** |
+| **Total** | **39** | **30** | **19** |
 
-`llms-txt`, `llms-full-txt`, and `agents-md` raise the scored total to 21. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
+`llms-txt`, `llms-full-txt`, and `agents-md` raise the scored total to 22. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
