@@ -54,6 +54,8 @@ export interface Check {
   spec: { url: string; asOf: string };
   defaultEnabled: boolean;
   scored: boolean;
+  /** Check inspects a single content page — included in --crawl sampling. */
+  pageScoped?: boolean;
   run(target: Target, http: HttpClient, options?: CheckRunOptions): Promise<CheckResult>;
 }
 

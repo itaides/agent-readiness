@@ -104,6 +104,24 @@ const WEB_BOT_AUTH = {
 
 const MARKDOWN_PAGE = `# Article 1\n\nFixture markdown content used to satisfy markdown-negotiation.\n`;
 
+const HTML_PAGE = `<!doctype html><html lang="en"><head>
+<title>Fixture</title>
+<meta name="description" content="A fixture documentation page with enough descriptive text to satisfy the meta description length requirement.">
+<meta property="og:title" content="Fixture">
+<meta property="og:description" content="Fixture docs for agents">
+<link rel="canonical" href="%BASE_URL%/">
+<link rel="alternate" type="text/markdown" href="/index.md">
+<link rel="alternate" type="application/rss+xml" href="/feed.xml">
+<script type="application/ld+json">{"@type":"Organization","name":"Fixture","dateModified":"2026-10-01"}</script>
+</head><body>
+<h1>Fixture</h1><h2>Install</h2><h2>Usage</h2>
+<p>${'Readable fixture content for agent checks. '.repeat(40)}</p>
+<a href="/article-1">Read the first article</a>
+<button type="button">Get started</button>
+<time datetime="2026-10-01">October 2026</time>
+<script>navigator.modelContext.registerTool({name:"x"});</script>
+</body></html>`;
+
 const AUTH_MD = `# auth.md
 
 ## Discover
@@ -115,7 +133,7 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
   const accept = req.headers.accept ?? '';
   const url = req.url ?? '/';
 
-  if (url === '/' || url === '/article-1') {
+  if (url === '/' || url === '/article-1' || url === '/article-2') {
     if (/text\/markdown/i.test(accept)) {
       res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
       res.end(MARKDOWN_PAGE);
@@ -125,8 +143,9 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
       'content-type': 'text/html; charset=utf-8',
       link: '</.well-known/api-catalog>; rel="api-catalog"',
       'content-signal': 'ai-train=no, search=yes, ai-input=yes',
+      'last-modified': 'Wed, 01 Oct 2026 00:00:00 GMT',
     });
-    res.end('<!doctype html><html><body><h1>Fixture</h1><script>navigator.modelContext.registerTool({name:"x"});</script></body></html>');
+    res.end(HTML_PAGE.replaceAll('%BASE_URL%', baseUrl));
     return;
   }
   if (url === '/robots.txt') {

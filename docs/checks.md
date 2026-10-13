@@ -43,6 +43,22 @@ Requests the content URL with `Accept: text/markdown`. Passes on HTTP 200, `text
 
 Enabled with `--include-llms-txt` or `--only llms-txt`. `GET /llms.txt` must return HTTP 200 as `text/plain` or `text/markdown`, be non-empty, and contain an H1. Source: [llms.txt proposal](https://llmstxt.org/).
 
+### `page-html-quality` — scored, default
+
+Fetches the content URL. Fails on non-200, non-`text/html`, more than one redirect hop, or a text-to-HTML ratio ≤15% (SPA shell). Warns when readable but missing `<html lang>`, meta description ≥50 chars, `og:title`/`og:description`, a canonical link, or ≥3 h1–h3 headings. Source: [Vercel agent-readability spec](https://vercel.com/kb/guide/agent-readability-spec).
+
+### `json-ld` — scored, default
+
+Extracts `application/ld+json` blocks from the content page. Passes when ≥1 block parses and declares `@type`; fails on no blocks or unparseable blocks; warns when only microdata/RDFa is present. Source: [Schema.org](https://schema.org/).
+
+### `freshness-signals` — informational, default
+
+Reports JSON-LD `datePublished`/`dateModified`, `<time datetime>`, article/og time meta, or a `Last-Modified` header on the content page. Warns when none exist. Source: [agent-ready.dev](https://agent-ready.dev/what-is-an-agent-ready-website).
+
+### `semantic-controls` — informational, default
+
+Fetch-only heuristic for browser-driving agents: counts `<a href>`/`<button>` controls, flags `onclick` handlers on non-interactive elements, majority-generic link text, and unlabelled inputs. Source: [axd.md](https://axd.md/).
+
 ## Bot access and content policy
 
 ### `content-signal` — scored, default
@@ -144,10 +160,10 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 | Category | Available | Default | Scored by default |
 |---|---:|---:|---:|
 | Discoverability | 4 | 4 | 3 |
-| Content | 2 | 1 | 1 |
+| Content | 6 | 5 | 3 |
 | Bot access | 4 | 4 | 3 |
 | Capabilities | 10 | 7 | 6 |
 | Commerce | 3 | 0 | 0 |
-| **Total** | **23** | **16** | **13** |
+| **Total** | **27** | **20** | **15** |
 
-`llms-txt` raises the scored total to 14. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
+`llms-txt` raises the scored total to 16. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.

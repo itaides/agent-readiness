@@ -23,6 +23,10 @@ import x402 from './checks/x402';
 import mpp from './checks/mpp';
 import mcpServerDiscover from './checks/mcp-server-discover';
 import browserAgentic from './checks/browser-agentic';
+import pageHtmlQuality from './checks/page-html-quality';
+import jsonLd from './checks/json-ld';
+import freshnessSignals from './checks/freshness-signals';
+import semanticControls from './checks/semantic-controls';
 
 export const checks: Check[] = [
   robotsTxt,
@@ -31,6 +35,10 @@ export const checks: Check[] = [
   dnsAid,
   markdownNegotiation,
   llmsTxt,
+  pageHtmlQuality,
+  jsonLd,
+  freshnessSignals,
+  semanticControls,
   contentSignal,
   aiBotRules,
   botPolicyMatrix,
@@ -59,6 +67,10 @@ export const PRESETS: Record<'all' | 'content' | 'api' | 'commerce', string[] | 
     'dns-aid',
     'markdown-negotiation',
     'llms-txt',
+    'page-html-quality',
+    'json-ld',
+    'freshness-signals',
+    'semantic-controls',
     'content-signal',
     'ai-bot-rules',
     'bot-policy-matrix',

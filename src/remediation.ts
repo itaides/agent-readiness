@@ -26,6 +26,20 @@ const GUIDANCE: Record<string, Guidance> = {
     suggestion: 'Return Markdown plus Content-Type: text/markdown and Vary: Accept for requests accepting text/markdown. On Cloudflare, enable Markdown for Agents in AI Crawl Control.',
     prompt: true,
   },
+  'page-html-quality': {
+    suggestion: 'Serve real content in the initial HTML: SSR or prerender, text-to-HTML ratio above 15%, plus html lang, meta description, og:title/og:description, a canonical link, and semantic headings.',
+    prompt: true,
+  },
+  'json-ld': {
+    suggestion: 'Embed at least one valid application/ld+json block with @type (Organization, WebSite, FAQPage as appropriate); prefer JSON-LD over microdata/RDFa.',
+    prompt: true,
+  },
+  'freshness-signals': {
+    suggestion: 'Expose freshness: datePublished/dateModified in JSON-LD, a <time datetime> element, or og/article time meta — agents use these to decide what to trust.',
+  },
+  'semantic-controls': {
+    suggestion: 'Use real <a> and <button> elements with descriptive labels instead of click-handler divs; label every form input so browser-driving agents can act.',
+  },
   'llms-txt': {
     suggestion: 'Publish /llms.txt as text/plain or text/markdown with an H1 and curated links to the most useful agent-facing content.',
     prompt: true,
