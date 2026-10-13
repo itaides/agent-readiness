@@ -24,6 +24,7 @@ interface Args {
   headers: Record<string, string>;
   includeLlmsTxt: boolean;
   includeAuthMd: boolean;
+  includeAgentsMd: boolean;
   browser: boolean;
   verifySkillDigests: boolean;
   baseline?: string;
@@ -44,6 +45,7 @@ Options:
   --list-checks                 List all available checks and exit
   --include-llms-txt            Include the opt-in llms.txt and llms-full.txt checks
   --include-auth-md             Include the API-focused auth.md check
+  --include-agents-md           Include the opt-in AGENTS.md check
   --content-url <url>           Page used for content and browser checks
   --commerce-url <url>          Paid resource used for UCP/x402/MPP checks
   --mcp-url <url>               MCP HTTP endpoint used for server/discover
@@ -74,6 +76,7 @@ function parseArgs(argv: string[]): Args {
     headers: {},
     includeLlmsTxt: false,
     includeAuthMd: false,
+    includeAgentsMd: false,
     browser: false,
     verifySkillDigests: false,
     preset: 'all',
@@ -91,6 +94,7 @@ function parseArgs(argv: string[]): Args {
       case '--insecure': args.insecure = true; break;
       case '--include-llms-txt': args.includeLlmsTxt = true; break;
       case '--include-auth-md': args.includeAuthMd = true; break;
+      case '--include-agents-md': args.includeAgentsMd = true; break;
       case '--content-url': args.contentUrl = argv[++i]; break;
       case '--commerce-url': args.commerceUrl = argv[++i]; break;
       case '--mcp-url': args.mcpUrl = argv[++i]; break;
@@ -128,6 +132,7 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
     const explicitlyActivated = new Set<string>();
     if (args.includeLlmsTxt) { explicitlyActivated.add('llms-txt'); explicitlyActivated.add('llms-full-txt'); }
     if (args.includeAuthMd) explicitlyActivated.add('auth-md');
+    if (args.includeAgentsMd) explicitlyActivated.add('agents-md');
     if (args.browser) explicitlyActivated.add('browser-agentic');
     if (args.commerceUrl) {
       explicitlyActivated.add('ucp');
