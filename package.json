@@ -35,7 +35,7 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
+    "build": "bun build src/cli.ts --target=node --minify --outfile=dist/cli.js",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "audit:specs": "bun run scripts/audit-spec-staleness.ts",
