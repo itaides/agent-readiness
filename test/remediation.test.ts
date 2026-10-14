@@ -56,7 +56,8 @@ describe('actionable remediation', () => {
     expect(formatHuman(scanReport)).toContain('FIX     Return Markdown');
     expect(formatHuman(scanReport)).toContain('VERIFY  agent-readiness https://example.com/ --only markdown-negotiation');
     expect(formatMarkdown(scanReport)).toContain('**How to fix:** Return Markdown');
-    expect(formatHtml(scanReport)).toContain('<strong>How to fix</strong>Return Markdown');
+    expect(formatHtml(scanReport)).toContain('How to fix</div><p>Return Markdown');
+    expect(formatHtml(scanReport)).toContain('agent-readiness https://example.com/ --only markdown-negotiation');
     expect(JSON.parse(formatJson(scanReport)).checks[0].remediation.verifyCommand).toContain('--only markdown-negotiation');
   });
 });
