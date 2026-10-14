@@ -1,0 +1,14 @@
+{
+  "name": "agent-readiness-site",
+  "private": true,
+  "type": "module",
+  "description": "Landing page and hosted UI for agent-readiness, deployed to Cloudflare Workers static assets.",
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "dev": "bun run build && wrangler dev",
+    "deploy": "bun run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.0"
+  }
+}
