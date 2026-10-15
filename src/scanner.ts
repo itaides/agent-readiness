@@ -8,12 +8,15 @@ import type {
   Report,
   Target,
   CheckRunOptions,
+  SiteType,
 } from './types';
+import { NOT_APPLICABLE } from './registry';
 import { addRemediation } from './remediation';
 import { VERSION } from './version';
 
 export interface ScanOptions {
   concurrency: number;
+  siteType?: SiteType;
   checkOptions?: Partial<CheckRunOptions>;
 }
 
@@ -28,9 +31,15 @@ export async function scan(
     verifySkillDigests: false,
     ...opts.checkOptions,
   };
+  const siteType = opts.siteType ?? 'full';
+  const notApplicable = new Set(NOT_APPLICABLE[siteType].ids);
   const rawResults = await Promise.all(
     checks.map((c) =>
       limit(async (): Promise<CheckResult> => {
+        if (notApplicable.has(c.id)) {
+          const reason = NOT_APPLICABLE[siteType].reason;
+          return { id: c.id, category: c.category, title: c.title, status: 'skip', message: reason, spec: c.spec, evidence: { note: reason } };
+        }
         try {
           return await c.run(target, http, checkOptions);
         } catch (err) {
@@ -62,6 +71,7 @@ export async function scan(
     summary: buildSummary(results, checks),
     checks: results,
     score: buildScore(results, checks),
+    ...(siteType !== 'full' ? { siteType, notApplicable: checks.filter((c) => notApplicable.has(c.id)).map((c) => c.id) } : {}),
   };
 }
 

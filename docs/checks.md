@@ -220,6 +220,12 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 
 Every report includes `score`: `passed / total × 100` over scored checks (statuses pass|fail only), plus a letter grade (A+ ≥97, A ≥90, B ≥80, C ≥70, D ≥50, F <50). Informational and skipped checks never count.
 
+### Site type
+
+By default (`--site-type full`) every selected scored check counts. A content site (docs, blog, marketing) has no API or agent endpoint, so `--site-type content` marks these checks not applicable: `link-header-api-catalog`, `api-catalog`, `openapi-discovery`, `oauth-authorization-server`, `oauth-protected-resource`, `a2a-agent-card`, `mcp-server-card`, `web-bot-auth`. They aren't run (no requests), are reported as `skip` with the reason, and don't count toward the score. `agent-skills` stays scored: a content site can still publish skills.
+
+The JSON report records `siteType` and the `notApplicable` check ids; human and Markdown reports show the site type in the header. Switching site type is never a `--baseline` regression, since `skip` isn't `fail`. To leave out any other checks, use `--skip id1,id2`.
+
 ## Crawl sampling
 
 `--crawl <n>` samples up to `n` URLs evenly across the discovered sitemap and runs the page-scoped checks (`pageScoped` on the check) against each, aggregating per-check pass/warn/fail counts under `report.crawl`. It shares the scan's HTTP client, timeouts, and injected headers.

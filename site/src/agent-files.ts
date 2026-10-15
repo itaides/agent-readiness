@@ -170,6 +170,7 @@ ${USAGE}
 There are no config files or environment variables. Everything is a flag:
 
 - \`--only id1,id2\` / \`--skip id\` / \`--preset content|api|commerce\` choose checks (\`--list-checks\` lists ids).
+- \`--site-type content\` for docs, blogs and marketing sites: API and auth checks are skipped and left out of the score.
 - \`--include-llms-txt\`, \`--include-agents-md\`, \`--commerce-url <url>\`, \`--mcp-url <url>\` and \`--browser\` turn on opt-in checks.
 - \`--header "K: V"\`, \`--cookie <value>\` and \`--user-agent <ua>\` shape requests; \`--insecure\` skips TLS checks (automatic for localhost and private IPs).
 

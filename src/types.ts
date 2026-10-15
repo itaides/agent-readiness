@@ -101,6 +101,9 @@ export interface CrawlSummary {
   perCheck: Record<string, CrawlCheckStat>;
 }
 
+/** What kind of site is scanned. Checks that don't apply to it are skipped and left out of the score. */
+export type SiteType = 'full' | 'content';
+
 export interface Report {
   version: 1;
   target: string;
@@ -110,4 +113,8 @@ export interface Report {
   checks: CheckResult[];
   score?: { value: number; grade: string; passed: number; total: number };
   crawl?: CrawlSummary;
+  /** Set when a site type other than the default `full` marked checks not applicable. */
+  siteType?: SiteType;
+  /** Ids of the selected checks that siteType marked not applicable (reported as skipped). */
+  notApplicable?: string[];
 }

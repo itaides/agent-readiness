@@ -18,8 +18,6 @@ permissions:
   contents: read
 
 env:
-  # A content site: score the content checks plus the site's opt-in llms.txt and AGENTS.md.
-  SCAN_ARGS: --preset content --include-llms-txt --include-agents-md
   MIN_SCORE: '90'
   OUT_DIR: agent-readiness-report
 
@@ -30,6 +28,8 @@ jobs:
     timeout-minutes: 15
     env:
       APP_URL: http://127.0.0.1:8787
+      # A content site: the full suite minus the API/auth checks it can't have, plus its opt-in llms.txt and AGENTS.md.
+      SCAN_ARGS: --site-type content --include-llms-txt --include-agents-md
       BASELINE: .agent-readiness/baseline.json
       AGENT_READINESS: node dist/cli.js
       WRANGLER_SEND_METRICS: 'false'
@@ -98,6 +98,9 @@ jobs:
     timeout-minutes: 10
     env:
       TARGET_URL: ${{ vars.AGENT_READINESS_URL || 'https://agent-readiness-site.itaios052.workers.dev' }}
+      # The published CLI (0.1.0) predates --site-type and ignores unknown flags, so use the content
+      # preset here. Switch to "--site-type content ..." once the gate script pins a release that has it.
+      SCAN_ARGS: --preset content --include-llms-txt --include-agents-md
       BASELINE: .agent-readiness/production.json
     steps:
       # Check out into a subfolder: this repo's package.json is named agent-readiness-cli, so npx run from

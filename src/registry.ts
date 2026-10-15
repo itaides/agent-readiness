@@ -1,4 +1,4 @@
-import type { Check } from './types';
+import type { Check, SiteType } from './types';
 
 import robotsTxt from './checks/robots-txt';
 import sitemap from './checks/sitemap';
@@ -127,3 +127,27 @@ export const PRESETS: Record<'all' | 'content' | 'api' | 'commerce', string[] | 
   ],
   commerce: ['ucp', 'x402', 'mpp'],
 };
+
+/**
+ * Checks that don't apply to a site type. They aren't run, are reported as skipped with the reason,
+ * and don't count toward the score. `--skip` covers any other list.
+ */
+export const NOT_APPLICABLE: Record<SiteType, { ids: string[]; reason: string }> = {
+  full: { ids: [], reason: '' },
+  content: {
+    // API, auth and agent-endpoint checks: a content site (docs, blog, marketing) has nothing to publish there.
+    ids: [
+      'link-header-api-catalog',
+      'api-catalog',
+      'openapi-discovery',
+      'oauth-authorization-server',
+      'oauth-protected-resource',
+      'a2a-agent-card',
+      'mcp-server-card',
+      'web-bot-auth',
+    ],
+    reason: 'Not applicable to a content site (--site-type content): no API or agent endpoint to describe',
+  },
+};
+
+export const SITE_TYPES = Object.keys(NOT_APPLICABLE) as SiteType[];

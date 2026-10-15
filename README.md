@@ -141,6 +141,8 @@ agent-readiness <url> [options]
 
   --preset all|content|api|commerce
                                 Check group preset (default: all)
+  --site-type full|content      content: skip API/auth checks a content site can't have,
+                                and leave them out of the score (default: full)
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List every check and preset, then exit
