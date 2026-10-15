@@ -20,6 +20,7 @@ import {
   tdmrepJson,
 } from './agent-files';
 import { renderLanding, renderNotFound, renderScanPage } from './pages';
+import { SITE_JS } from './script';
 import { sampleReport } from './sample-report';
 import { SITE_CSS } from './styles';
 
@@ -52,7 +53,7 @@ export async function buildSite(outDir: string, now = new Date()): Promise<strin
     '.well-known/tdmrep.json': tdmrepJson(),
     // Same-origin files rather than inline, so pages stay mostly text and the styles are cached.
     'assets/site.css': minifyCss(SITE_CSS),
-    'assets/site.js': minifyJs(REPORT_JS),
+    'assets/site.js': minifyJs(`${REPORT_JS}\n${SITE_JS}`),
     _headers: headersFile(),
   };
 
