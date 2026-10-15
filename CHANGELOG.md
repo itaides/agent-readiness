@@ -4,20 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
 ### Added
 
 - **`--site-type content`** for docs, blogs and marketing sites: the API, auth and agent-endpoint checks they can't have (API catalog and its Link header, OpenAPI, OAuth AS/PR metadata, A2A card, MCP card, Web Bot Auth) aren't run, are reported as skipped with the reason, and don't count toward the score. Reports record `siteType` and the `notApplicable` ids. Closes [#53](https://github.com/itaides/agent-readiness/issues/53).
 - **HTML reports describe themselves for agents:** a schema.org `Report` JSON-LD block (with `datePublished`, the scanned site and the tool version), a meta description with the score, and Open Graph tags. `formatHtml(report, { canonicalUrl })` adds a canonical link when the publish URL is known; the site's example report uses it, so `/example/` now passes the JSON-LD, freshness and page-readability checks.
+- **CI/CD examples** ([`docs/ci.md`](docs/ci.md)): a portable gate script (`MIN_SCORE`, `BASELINE`, JSON/HTML/Markdown reports) plus GitHub Actions and GitLab CI workflows. Pull requests are gated on their own build (started in the job, compared with the default branch's scan); a scheduled job watches production. Tested against the fixture servers in `test/ci-examples.test.ts`, and this repo runs the gate on its own site in `.github/workflows/agent-readiness.yml`.
 
 ### Changed
 
-- **Website** passes its own content checks (13/14 under `--preset content`): crawler policy in `robots.txt` (Content-Signal plus explicit AI-bot groups), `sitemap.xml`, `sitemap.md`, `llms-full.txt`, `AGENTS.md`, an Agent Skill, TDMRep, JSON-LD, canonical links, a Markdown version of each page, and a Worker that serves them for `Accept: text/markdown`. Styles and scripts moved to same-origin files. The install command is now `npm install -g agent-readiness-cli`.
+- **Website** passes its own checks (100/100 with `--site-type content`, 11 of 11 applicable scored checks): crawler policy in `robots.txt` (Content-Signal plus explicit AI-bot groups), `sitemap.xml`, `sitemap.md`, `llms-full.txt`, `AGENTS.md`, an Agent Skill, TDMRep, JSON-LD, canonical links, a Markdown version of each page, and a Worker that serves them for `Accept: text/markdown`. Styles and scripts moved to same-origin files. The install command is now `npm install -g agent-readiness-cli`.
+- **Website** tabs on the landing page switch with a view transition, and no longer show two panels at once while switching.
 
 ### Fixed
 
 - **Sitemap indexes are followed.** `sitemap-lastmod` and `--crawl` read the first sitemap only, so a site whose sitemap is an index got a false "no `<url>` entries" warning, and the crawl sampled sitemap files as if they were pages. Both now read up to 10 same-origin child sitemaps. Found scanning eventimio.ai: lastmod went from a false warning to 85/85 URLs, and the crawl now samples real pages.
 - **`bot-ua-differential` recognises Markdown served to AI bots.** A site that answers GPTBot and ClaudeBot with a Markdown version of an HTML page was reported as "degraded" (2% of the browser body size). A 200 Markdown response of real content now passes as an alternate format; thin Markdown still warns, and blocking still fails.
-
 - **`sitemap-lastmod`** passed at 79.5% coverage because it rounded the percentage before comparing; it now passes only at 80% or more, as documented.
 
 ## [0.1.0] - 2026-10-15
@@ -26,7 +29,6 @@ First public release, published to npm as [`agent-readiness-cli`](https://www.np
 
 ### Added
 
-- **CI/CD examples** ([`docs/ci.md`](docs/ci.md)): a portable gate script (`MIN_SCORE`, `BASELINE`, JSON/HTML/Markdown reports) plus GitHub Actions and GitLab CI workflows. Pull requests are gated on their own build (started in the job, compared with the default branch's scan); a scheduled job watches production. Tested against the fixture servers in `test/ci-examples.test.ts`, and this repo runs the gate on its own site in `.github/workflows/agent-readiness.yml`.
 - CLI scanning any URL (public or local) for **39 agent-readiness checks** across 5 categories. See [`docs/checks.md`](docs/checks.md) for endpoints, pass criteria, scoring, and spec links.
   - Discoverability (6): `robots-txt`, `sitemap`, `sitemap-lastmod` (informational), `link-header-api-catalog`, `dns-aid` (informational), `rss-atom` (informational)
   - Content (11): `markdown-negotiation`, `markdown-mirror`, `markdown-link-rel` (informational), `llms-txt` (opt-in), `llms-full-txt` (opt-in), `sitemap-md` (informational), `agents-md` (opt-in), `page-html-quality`, `json-ld`, `freshness-signals` (informational), `semantic-controls` (informational)
