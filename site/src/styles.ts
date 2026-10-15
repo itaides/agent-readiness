@@ -17,7 +17,7 @@ export const SITE_CSS = String.raw`
     --muted: light-dark(oklch(47% .03 260), oklch(72% .02 260));
     --faint: light-dark(oklch(53% .025 260), oklch(64% .02 260));
     --accent: light-dark(oklch(49% .21 267), oklch(73% .15 272));
-    --on-accent: oklch(100% 0 0);
+    --on-accent: light-dark(oklch(100% 0 0), oklch(14.5% .006 260));
     --pass: light-dark(oklch(51% .14 150), oklch(79% .16 152));
     --fail: light-dark(oklch(52% .19 30), oklch(75% .15 28));
     --warn: light-dark(oklch(50% .11 65), oklch(83% .13 85));
@@ -82,7 +82,7 @@ export const SITE_CSS = String.raw`
     min-block-size: 44px; padding-inline: 18px; border-radius: var(--r-ctl); cursor: pointer;
     border: 1px solid var(--border-strong); background: var(--surface); color: var(--fg); font: 600 14px var(--sans);
     &:hover { background: var(--sunken); text-decoration: none; }
-    &.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); &:hover { background: color-mix(in oklch, var(--accent), black 15%); } }
+    &.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); &:hover { background: color-mix(in srgb, var(--accent), black 15%); } }
     &.sm { min-block-size: 36px; padding-inline: 12px; font-weight: 500; font-size: 13px; }
   }
 
@@ -98,9 +98,9 @@ export const SITE_CSS = String.raw`
     inline-size: min(100%, 680px); margin-block-start: 8px; padding: 8px;
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
     background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
-    box-shadow: 0 1px 2px color-mix(in oklch, var(--fg) 4%, transparent), 0 10px 30px -12px color-mix(in oklch, var(--fg) 18%, transparent);
-    &:has(input:focus-visible) { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in oklch, var(--accent) 18%, transparent); }
-    &:has(input:user-invalid) { border-color: var(--fail); box-shadow: 0 0 0 4px color-mix(in oklch, var(--fail) 14%, transparent); }
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 4%, transparent), 0 10px 30px -12px color-mix(in srgb, var(--fg) 18%, transparent);
+    &:has(input:focus-visible) { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+    &:has(input:user-invalid) { border-color: var(--fail); box-shadow: 0 0 0 4px color-mix(in srgb, var(--fail) 14%, transparent); }
     & input { flex: 1 1 260px; min-inline-size: 0; min-block-size: 44px; border: 0; outline: 0; background: transparent; font: 16px var(--mono); }
     & input::placeholder { color: var(--faint); }
     @container page (inline-size < 560px) { & .btn { inline-size: 100%; } }
@@ -167,8 +167,8 @@ export const SITE_CSS = String.raw`
   .ring-of { font: 7cqi var(--mono); color: var(--muted); }
   .grade, .badge {
     color: var(--status);
-    background: color-mix(in oklch, var(--status) var(--tint), var(--surface));
-    border: 1px solid color-mix(in oklch, var(--status) var(--line), var(--surface));
+    background: color-mix(in srgb, var(--status) var(--tint), var(--surface));
+    border: 1px solid color-mix(in srgb, var(--status) var(--line), var(--surface));
   }
   .grade {
     margin-block-start: 4cqi; display: inline-flex; align-items: baseline; gap: .4em; padding: .2em .8em;

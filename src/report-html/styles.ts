@@ -17,6 +17,7 @@ export const REPORT_CSS = String.raw`
     --muted: light-dark(oklch(47% .03 260), oklch(72% .02 260));
     --faint: light-dark(oklch(53% .025 260), oklch(64% .02 260));
     --accent: light-dark(oklch(49% .21 267), oklch(73% .15 272));
+    --on-accent: light-dark(oklch(100% 0 0), oklch(14.5% .006 260));
     --pass: light-dark(oklch(51% .14 150), oklch(79% .16 152));
     --fail: light-dark(oklch(52% .19 30), oklch(75% .15 28));
     --warn: light-dark(oklch(50% .11 65), oklch(83% .13 85));
@@ -142,8 +143,8 @@ export const REPORT_CSS = String.raw`
   .ring-of { font: 6.5cqi var(--mono); color: var(--muted); }
   .grade, .badge {
     color: var(--status);
-    background: color-mix(in oklch, var(--status) var(--tint), var(--surface));
-    border: 1px solid color-mix(in oklch, var(--status) var(--line), var(--surface));
+    background: color-mix(in srgb, var(--status) var(--tint), var(--surface));
+    border: 1px solid color-mix(in srgb, var(--status) var(--line), var(--surface));
   }
   .grade {
     margin-block-start: 4cqi; display: inline-flex; align-items: baseline; gap: .4em; padding: .2em .8em;
@@ -286,7 +287,7 @@ export const REPORT_CSS = String.raw`
   .rate { display: flex; align-items: center; gap: 12px; }
   .bar {
     display: flex; block-size: 8px; inline-size: 180px; flex: none; border-radius: 4px; overflow: clip;
-    background: color-mix(in oklch, var(--skip) 14%, var(--surface));
+    background: color-mix(in srgb, var(--skip) 14%, var(--surface));
     & i { background: var(--status); }
   }
   .rate-v { font: 13px var(--mono); min-inline-size: 4ch; }
@@ -301,7 +302,7 @@ export const REPORT_CSS = String.raw`
     display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
     @container report (inline-size >= 720px) { justify-content: start; }
   }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: oklch(100% 0 0); &:hover { background: color-mix(in oklch, var(--accent), black 15%); } }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); &:hover { background: color-mix(in srgb, var(--accent), black 15%); } }
 
   .share {
     container: share / inline-size;
@@ -316,13 +317,13 @@ export const REPORT_CSS = String.raw`
     display: inline-flex; align-items: stretch; border-radius: 6px; overflow: clip; font: 600 12px/1 var(--mono);
     border: 1px solid var(--border-strong);
     & span { padding: 6px 8px; background: var(--fg); color: var(--bg); }
-    & b { padding: 6px 8px; color: var(--status); background: color-mix(in oklch, var(--status) var(--tint), var(--surface)); }
+    & b { padding: 6px 8px; color: var(--status); background: color-mix(in srgb, var(--status) var(--tint), var(--surface)); }
   }
 
   .viewtoggle {
     position: sticky; inset-block-end: 16px; z-index: 2; inline-size: max-content; margin: 24px auto 0; padding: 3px;
     display: flex; gap: 2px; border: 1px solid var(--border-strong); border-radius: 999px;
-    background: color-mix(in oklch, var(--surface) 85%, transparent); backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(8px);
     & label { position: relative; display: grid; place-items: center; min-block-size: 32px; padding-inline: 14px; border-radius: 999px; font: 500 13px var(--mono); color: var(--muted); cursor: pointer; }
     & input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
     & label:has(:checked), &:not(:has(:checked)) label:first-of-type { background: var(--fg); color: var(--bg); }
@@ -370,7 +371,7 @@ export const REPORT_CSS = String.raw`
 
   .gain {
     font: 600 11px var(--mono); padding: 1px 7px; border-radius: 999px; letter-spacing: 0;
-    color: var(--pass); background: color-mix(in oklch, var(--pass) var(--tint), var(--surface));
+    color: var(--pass); background: color-mix(in srgb, var(--pass) var(--tint), var(--surface));
   }
   .how { margin-block-start: 4px; font: 12px var(--mono); color: var(--faint); }
 
@@ -418,7 +419,7 @@ export const REPORT_CSS = String.raw`
     .hero > :nth-child(2) { transition-delay: 80ms; }
     .cat {
       transition-delay: calc(120ms + sibling-index() * 40ms);
-      &:hover { box-shadow: 0 6px 18px -10px color-mix(in oklch, var(--fg) 40%, transparent); transition-delay: 0s; }
+      &:hover { box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--fg) 40%, transparent); transition-delay: 0s; }
     }
     .seg i {
       transform-origin: left;
@@ -468,14 +469,14 @@ export const REPORT_CSS = String.raw`
   .ring.empty progress { background: repeating-conic-gradient(var(--border) 0 4deg, transparent 4deg 9deg); }
   .ring.empty .ring-num { color: var(--faint); }
   .fix.none { background: transparent; border-style: dashed; & .fix-h { color: var(--muted); } & p { color: var(--muted); } }
-  .btn[data-copied] { color: var(--pass); border-color: color-mix(in oklch, var(--pass) var(--line), var(--surface)); }
+  .btn[data-copied] { color: var(--pass); border-color: color-mix(in srgb, var(--pass) var(--line), var(--surface)); }
   .ev-note { padding: 10px 14px; border-block-start: 1px solid var(--border); font-size: 13px; color: var(--muted); }
 
   .fixdlg {
     counter-reset: sel 0 pts var(--score, 0);
     inline-size: min(100% - 32px, 720px); max-block-size: min(100dvb - 64px, 820px); padding: 0;
     color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: clip;
-    box-shadow: 0 30px 80px -20px color-mix(in oklch, black 45%, transparent);
+    box-shadow: 0 30px 80px -20px color-mix(in srgb, black 45%, transparent);
     &[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
     &:target:not([open]) { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; position: static; margin: 32px auto; }
     &::backdrop { background: oklch(0% 0 0 / .45); }
@@ -505,7 +506,7 @@ export const REPORT_CSS = String.raw`
     & .gain { grid-row: 1; grid-column: 3; }
     & input:checked { counter-increment: sel 1 pts var(--pts, 0); }
   }
-  .fcat .gain[data-status="warn"] { color: var(--warn); background: color-mix(in oklch, var(--warn) var(--tint), var(--surface)); }
+  .fcat .gain[data-status="warn"] { color: var(--warn); background: color-mix(in srgb, var(--warn) var(--tint), var(--surface)); }
   details.more {
     margin: 0 0 8px 26px;
     & > summary { list-style: none; cursor: pointer; font-size: 12px; color: var(--muted); inline-size: max-content; &::-webkit-details-marker { display: none; } }
