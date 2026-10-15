@@ -1,7 +1,11 @@
 # Add to .gitlab-ci.yml and copy agent-readiness-gate.sh to scripts/.
-# Set the CI/CD variable AGENT_READINESS_URL to a stable URL (staging or production).
 #
-# Merge requests read the baseline cached by the default branch; the default branch refreshes it.
+# - agent-readiness (merge requests, pushes to the default branch): builds and starts your app in the
+#   job and scans it at APP_URL, so a merge request is measured on its own code. Merge requests are
+#   compared with the default branch's latest scan (same URL) and must keep MIN_SCORE; the default
+#   branch saves its scan as the next baseline.
+# - agent-readiness:production (scheduled pipelines): scans the deployed site and compares it with its
+#   last passing scan. Create a pipeline schedule and set the CI/CD variable AGENT_READINESS_URL.
 agent-readiness:
   image: node:22
   stage: test
@@ -9,21 +13,27 @@ agent-readiness:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       variables:
         CACHE_POLICY: pull
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
       variables:
         CACHE_POLICY: pull-push
   variables:
+    # Adjust to your app.
+    APP_URL: http://localhost:3000
     MIN_SCORE: "70"
     BASELINE: .agent-readiness/baseline.json
     OUT_DIR: agent-readiness-report
   cache:
-    key: agent-readiness-baseline
+    key: agent-readiness-build
     paths:
       - .agent-readiness/
     policy: $CACHE_POLICY
     when: always
   script:
-    - bash scripts/agent-readiness-gate.sh "$AGENT_READINESS_URL" || status=$?
+    - npm ci && npm run build
+    - npm start > app.log 2>&1 &
+    - for _ in $(seq 60); do curl -fs -o /dev/null "$APP_URL" && break; sleep 1; done
+    - bash scripts/agent-readiness-gate.sh "$APP_URL" || status=$?
+    # The default branch's scan becomes the baseline even below MIN_SCORE: it's what was merged.
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] && [ -f "$OUT_DIR/report.json" ]; then
         mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
@@ -32,6 +42,33 @@ agent-readiness:
   artifacts:
     when: always
     expose_as: agent-readiness report
+    paths:
+      - agent-readiness-report/
+    expire_in: 30 days
+
+agent-readiness:production:
+  image: node:22
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $AGENT_READINESS_URL
+  variables:
+    BASELINE: .agent-readiness/production.json
+    OUT_DIR: agent-readiness-report
+  cache:
+    key: agent-readiness-production
+    paths:
+      - .agent-readiness/
+    when: always
+  script:
+    - bash scripts/agent-readiness-gate.sh "$AGENT_READINESS_URL" || status=$?
+    # Only a passing scan becomes the new baseline, so a regression keeps failing until it's fixed.
+    - |
+      if [ "${status:-0}" = 0 ]; then
+        mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
+      fi
+    - exit "${status:-0}"
+  artifacts:
+    when: always
     paths:
       - agent-readiness-report/
     expire_in: 30 days

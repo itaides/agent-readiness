@@ -94,6 +94,19 @@ describe('CI gate example', () => {
     expect(r.code).toBe(2);
   }, SLOW);
 
+  it('treats a missing URL as a usage error, not a gate failure', async () => {
+    // e.g. the AGENT_READINESS_URL repository variable isn't set
+    const r = await gate('', { OUT_DIR: join(work, 'nourl') });
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('no URL given');
+  });
+
+  it('rejects a MIN_SCORE that is not a whole number before scanning', async () => {
+    const r = await gate(good.url, { OUT_DIR: join(work, 'badmin'), MIN_SCORE: 'seventy' });
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('MIN_SCORE must be a whole number');
+  });
+
   it('passes a header with spaces through SCAN_HEADER', async () => {
     const r = await gate(good.url, { OUT_DIR: join(work, 'header'), SCAN_HEADER: 'Authorization: Bearer secret token', SCAN_ARGS: '--only robots-txt' });
     expect(r.code).toBe(0);
@@ -114,13 +127,48 @@ describe('CI workflow examples', () => {
     expect(script).toContain(`npx --yes ${pkg.name}@${pkg.version}`);
   });
 
-  for (const file of ['github-actions.yml', 'gitlab-ci.yml']) {
-    it(`${file} is valid YAML that runs the gate script`, async () => {
-      const text = await readFile(join(ROOT, 'examples', 'ci', file), 'utf8');
-      expect(() => Bun.YAML.parse(text)).not.toThrow();
-      expect(text).toContain('bash scripts/agent-readiness-gate.sh');
-      expect(text).toContain('MIN_SCORE');
-      expect(text).toContain('.agent-readiness/baseline.json');
-    });
-  }
+  type Step = { name?: string; run?: string; uses?: string; if?: string; with?: Record<string, string> };
+  type GhJob = { if: string; env: Record<string, string>; steps: Step[] };
+  const yaml = async (path: string) => Bun.YAML.parse(await readFile(join(ROOT, path), 'utf8')) as any;
+
+  it('github-actions.yml gates pull requests on their own build and watches production separately', async () => {
+    const wf = await yaml('examples/ci/github-actions.yml');
+    const build: GhJob = wf.jobs.build;
+    const production: GhJob = wf.jobs.production;
+    expect(build.if).toContain("'pull_request'");
+    // The PR scan targets the app started in the job, never the deployed site.
+    expect(build.env.APP_URL).toStartWith('http://localhost');
+    expect(JSON.stringify(build)).not.toContain('AGENT_READINESS_URL');
+    const runs = build.steps.map((st) => st.run ?? '').join('\n');
+    expect(runs).toContain('eval "$START_CMD"');
+    expect(runs).toContain('bash scripts/agent-readiness-gate.sh "$APP_URL"');
+    expect(build.env.MIN_SCORE).toBeDefined();
+    expect(build.env.BASELINE).toBe('.agent-readiness/baseline.json');
+    // Production is scheduled, opt-in, and only saves a baseline after a passing scan (no always()/!cancelled()).
+    expect(wf.on.schedule).toBeDefined();
+    expect(production.if).toContain("vars.AGENT_READINESS_URL != ''");
+    const save = production.steps.filter((st) => st.name?.includes('baseline') && !st.name.startsWith('Restore'));
+    expect(save.length).toBe(2);
+    for (const st of save) expect(st.if).toBeUndefined();
+  });
+
+  it('gitlab-ci.yml has the same build and production jobs', async () => {
+    const ci = await yaml('examples/ci/gitlab-ci.yml');
+    const build = ci['agent-readiness'];
+    const production = ci['agent-readiness:production'];
+    expect(build.variables.APP_URL).toStartWith('http://localhost');
+    expect(JSON.stringify(build)).not.toContain('AGENT_READINESS_URL');
+    expect(build.script.join('\n')).toContain('bash scripts/agent-readiness-gate.sh "$APP_URL"');
+    expect(build.cache.key).not.toBe(production.cache.key);
+    expect(production.rules[0].if).toContain('"schedule"');
+    expect(production.script.join('\n')).toContain('if [ "${status:-0}" = 0 ]');
+  });
+
+  it("this repo's workflow runs the example gate script on its own site", async () => {
+    const wf = await yaml('.github/workflows/agent-readiness.yml');
+    const runs = (wf.jobs.build.steps as Step[]).map((st) => st.run ?? '').join('\n');
+    expect(runs).toContain('bash examples/ci/agent-readiness-gate.sh "$APP_URL"');
+    expect(runs).toContain('wrangler dev');
+    expect(wf.jobs.build.env.APP_URL).toStartWith('http://127.0.0.1');
+  });
 });

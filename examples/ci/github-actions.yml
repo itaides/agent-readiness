@@ -1,26 +1,35 @@
 # Copy to .github/workflows/agent-readiness.yml and copy agent-readiness-gate.sh to scripts/.
-# Set the repository variable AGENT_READINESS_URL to a stable URL (staging or production).
 #
-# - Pull requests: scan, fail on regressions against the latest main baseline or a score below MIN_SCORE,
-#   upload the HTML/JSON/Markdown reports, and write the Markdown report to the job summary.
-# - Pushes to main: scan and save the report as the new baseline (via the Actions cache).
+# - build (pull requests, pushes to main): builds and starts your app on the runner and scans it at
+#   APP_URL, so a pull request is measured on its own code. The URL is the same on every run, so a
+#   pull request is compared with the latest main build: anything that newly fails breaks the build,
+#   and the score must stay at MIN_SCORE or above. Main saves its scan as the next baseline.
+# - production (daily, or run by hand): scans the deployed site and compares it with its last
+#   passing scan, to catch changes made outside the repo (CDN, WAF, hosting). Set the repository
+#   variable AGENT_READINESS_URL to enable it; without it the job is skipped.
 name: Agent readiness
 
 on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: '17 6 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  agent-readiness:
+  build:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
-      TARGET_URL: ${{ vars.AGENT_READINESS_URL }}
+      # Adjust these three to your app.
+      APP_URL: http://localhost:3000
+      BUILD_CMD: npm ci && npm run build
+      START_CMD: npm start
       MIN_SCORE: '70'
       BASELINE: .agent-readiness/baseline.json
       OUT_DIR: agent-readiness-report
@@ -31,15 +40,75 @@ jobs:
         with:
           node-version: 22
 
-      # PRs compare against the newest baseline saved from main. On a cache miss the gate
-      # skips the regression check and still enforces MIN_SCORE.
+      - name: Build
+        run: eval "$BUILD_CMD"
+
+      - name: Start the app
+        run: |
+          eval "$START_CMD" > app.log 2>&1 &
+          for _ in $(seq 60); do curl -fs -o /dev/null "$APP_URL" && exit 0; sleep 1; done
+          echo "The app didn't respond at $APP_URL within 60s" >&2; cat app.log >&2; exit 1
+
+      # Pull requests compare with the newest baseline saved by main. On a cache miss the
+      # gate skips the regression check and still enforces MIN_SCORE.
       - name: Restore baseline from main
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: .agent-readiness/baseline.json
-          key: agent-readiness-baseline-${{ github.sha }}
-          restore-keys: agent-readiness-baseline-
+          key: agent-readiness-build-${{ github.sha }}
+          restore-keys: agent-readiness-build-
+
+      - name: Scan
+        run: bash scripts/agent-readiness-gate.sh "$APP_URL"
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f "$OUT_DIR/report.md" ]; then cat "$OUT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-readiness-build
+          path: agent-readiness-report/
+          if-no-files-found: ignore
+
+      # Main's scan becomes the baseline even when main itself is below MIN_SCORE: it's what was merged.
+      - name: Prepare baseline
+        id: baseline
+        if: ${{ !cancelled() && github.event_name == 'push' && hashFiles('agent-readiness-report/report.json') != '' }}
+        run: mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
+
+      - name: Save baseline
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .agent-readiness/baseline.json
+          key: agent-readiness-build-${{ github.sha }}
+
+  production:
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.AGENT_READINESS_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_URL: ${{ vars.AGENT_READINESS_URL }}
+      BASELINE: .agent-readiness/production.json
+      OUT_DIR: agent-readiness-report
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Restore last passing scan
+        uses: actions/cache/restore@v4
+        with:
+          path: .agent-readiness/production.json
+          key: agent-readiness-production-${{ github.run_id }}
+          restore-keys: agent-readiness-production-
 
       - name: Scan
         run: bash scripts/agent-readiness-gate.sh "$TARGET_URL"
@@ -53,19 +122,16 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: agent-readiness-report
+          name: agent-readiness-production
           path: agent-readiness-report/
           if-no-files-found: ignore
 
-      # Save main's result as the baseline even when main itself fails MIN_SCORE.
+      # Only a passing scan becomes the new baseline, so a regression keeps failing until it's fixed.
       - name: Prepare baseline
-        id: baseline
-        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && hashFiles('agent-readiness-report/report.json') != '' }}
         run: mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
 
       - name: Save baseline
-        if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
         uses: actions/cache/save@v4
         with:
-          path: .agent-readiness/baseline.json
-          key: agent-readiness-baseline-${{ github.sha }}
+          path: .agent-readiness/production.json
+          key: agent-readiness-production-${{ github.run_id }}

@@ -15,7 +15,14 @@
 # Exit codes: 0 pass, 1 gate failed (score below MIN_SCORE or baseline regression), 2 scan/usage error.
 set -uo pipefail
 
-url="${1:?usage: agent-readiness-gate.sh <url>}"
+# Configuration mistakes exit 2, like scan errors, so they never look like a readiness regression.
+usage_error() { echo "agent-readiness: $*" >&2; exit 2; }
+
+url="${1:-}"
+[[ -n "$url" ]] || usage_error "no URL given (usage: agent-readiness-gate.sh <url>; is AGENT_READINESS_URL set?)"
+if [[ -n "${MIN_SCORE:-}" && ! "$MIN_SCORE" =~ ^[0-9]+$ ]]; then
+  usage_error "MIN_SCORE must be a whole number from 0 to 100, got \"$MIN_SCORE\""
+fi
 out="${OUT_DIR:-agent-readiness-report}"
 cli="${AGENT_READINESS:-npx --yes agent-readiness-cli@0.1.0}"
 # Empty-array expansions below use ${a[@]+...} so bash 3.2 (macOS) works under set -u.
