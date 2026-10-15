@@ -33,6 +33,14 @@ Statuses are `pass`, `fail`, `warn`, and `skip`. Only checks marked **scored** c
 
 Queries SVCB/HTTPS at `_index._agents.<hostname>`. Passes when at least one service record exists, warns when absent, and skips local/private targets. Node/Bun's resolver API does not expose the DNSSEC AD bit, so evidence explicitly reports DNSSEC as unknown. Source: [DNS-AID Internet-Draft](https://datatracker.ietf.org/doc/draft-mozleywilliams-dnsop-dnsaid/).
 
+### `sitemap-lastmod` — informational, default
+
+Fetches the sitemap (well-known path or robots-discovered). Passes when ≥80% of `<url>` entries carry `<lastmod>`; warns below that or when no sitemap exists. Source: [Sitemaps protocol](https://www.sitemaps.org/protocol.html).
+
+### `rss-atom` — informational, default
+
+Finds RSS/Atom feeds via `Link` headers or `<link rel="alternate">` on the content page and validates the feed starts as XML (`<?xml`, `<rss`, or `<feed`). Warns when absent. Source: [RSS 2.0](https://www.rssboard.org/rss-specification).
+
 ## Content
 
 ### `markdown-negotiation` — scored, default
@@ -58,6 +66,10 @@ Passes when the content page advertises `rel="alternate" type="text/markdown"` o
 ### `sitemap-md` — informational, default
 
 `GET /sitemap.md`. Passes on markdown content containing at least one markdown link; warns otherwise. Source: [Vercel agent-readability spec](https://vercel.com/kb/guide/agent-readability-spec).
+
+### `agents-md` — scored, opt-in
+
+Enabled with `--include-agents-md` or `--only agents-md`. Probes `/AGENTS.md`, `/agents.md`, `/.well-known/agents.md`, `/CLAUDE.md`, `/claude.md`. Passes on non-empty markdown covering ≥2 of install/config/usage; warns when a file exists but is thin. Source: [agents.md](https://agents.md/) and the [Vercel spec](https://vercel.com/kb/guide/agent-readability-spec).
 
 ### `page-html-quality` — scored, default
 
@@ -123,6 +135,14 @@ Reports explicit `robots.txt` stance for Cloudflare's current Search, Agent, and
 
 Passes on a JSON object at `/.well-known/webmcp` or inline `navigator.modelContext` usage. Absence is only a warning because fetch-only inspection cannot see registrations in external JavaScript. Use `--browser` for runtime evidence.
 
+### `agents-txt` — informational, default
+
+`GET /agents.json` then `/agents.txt`. Passes on a valid JSON object or non-empty text capability declaration; warns when absent (emerging convention). Source: [agents-txt spec](https://agents-txt.com/).
+
+### `openapi-discovery` — scored, default
+
+Probes `/openapi.json`, `/openapi.yaml`, `/swagger.json`, `/api/openapi.json`, `/api-docs`, `/docs/openapi.json`, `/.well-known/openapi.json`. Passes when a document parses with an `openapi`/`swagger` version field. Source: [OpenAPI Specification](https://spec.openapis.org/oas/latest.html).
+
 ### `auth-md` — informational, opt-in
 
 Enabled with `--include-auth-md` or `--only auth-md`. `GET /auth.md` should return Markdown/plain text with an `# auth.md` heading and point to `/.well-known/oauth-protected-resource`. Warnings do not supersede the structured OAuth metadata, which remains authoritative. Source: [auth.md documentation](https://workos.com/auth-md/docs/auth-md).
@@ -175,11 +195,11 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 
 | Category | Available | Default | Scored by default |
 |---|---:|---:|---:|
-| Discoverability | 4 | 4 | 3 |
-| Content | 10 | 8 | 4 |
+| Discoverability | 6 | 6 | 3 |
+| Content | 11 | 8 | 4 |
 | Bot access | 4 | 4 | 3 |
-| Capabilities | 10 | 7 | 6 |
+| Capabilities | 12 | 9 | 7 |
 | Commerce | 3 | 0 | 0 |
-| **Total** | **31** | **23** | **16** |
+| **Total** | **36** | **27** | **18** |
 
-`llms-txt` and `llms-full-txt` raise the scored total to 18. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
+`llms-txt`, `llms-full-txt`, and `agents-md` raise the scored total to 21. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.

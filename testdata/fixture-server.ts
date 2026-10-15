@@ -26,8 +26,8 @@ Sitemap: %BASE_URL%/sitemap.xml
 
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>%BASE_URL%/article-1</loc></url>
-  <url><loc>%BASE_URL%/article-2</loc></url>
+  <url><loc>%BASE_URL%/article-1</loc><lastmod>2026-10-01</lastmod></url>
+  <url><loc>%BASE_URL%/article-2</loc><lastmod>2026-10-01</lastmod></url>
 </urlset>
 `;
 
@@ -124,6 +124,11 @@ const HTML_PAGE = `<!doctype html><html lang="en"><head>
 
 const SITEMAP_MD = `# Fixture docs\n\n- [Article 1](/article-1.md)\n`;
 
+const RSS_FEED = `<?xml version="1.0"?>
+<rss version="2.0"><channel><title>Fixture</title><link>%BASE_URL%</link><item><title>A1</title></item></channel></rss>`;
+
+const OPENAPI_SPEC = { openapi: '3.1.0', info: { title: 'Fixture API', version: '1.0.0' }, paths: {} };
+
 const AUTH_MD = `# auth.md
 
 ## Discover
@@ -158,6 +163,21 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
   if (url === '/sitemap.md') {
     res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
     res.end(SITEMAP_MD);
+    return;
+  }
+  if (url === '/agents.json') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ name: 'fixture', capabilities: { mcp: true } }));
+    return;
+  }
+  if (url === '/openapi.json') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(OPENAPI_SPEC));
+    return;
+  }
+  if (url === '/feed.xml') {
+    res.writeHead(200, { 'content-type': 'application/rss+xml; charset=utf-8' });
+    res.end(RSS_FEED.replaceAll('%BASE_URL%', baseUrl));
     return;
   }
   if (url === '/robots.txt') {
