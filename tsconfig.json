@@ -11,6 +11,6 @@
     "noEmit": true,
     "types": ["bun", "node"]
   },
-  "include": ["src/**/*", "test/**/*", "scripts/**/*", "site/src/**/*", "site/scripts/**/*", "site/test/**/*"],
-  "exclude": ["node_modules", "dist", "testdata", "site/node_modules", "site/dist"]
+  "include": ["src/**/*", "test/**/*", "scripts/**/*", "testdata/serve.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **The website moved to its own repository.** `site/` (the landing page and example report) now lives with the hosted product and uses the CLI through `agent-readiness-cli/library`. This repo's agent-readiness workflow runs the example gate script against the all-pass fixture app (`bun run testdata/serve.ts`) instead.
+
 ## [0.3.0] - 2026-10-15
 
 ### Added

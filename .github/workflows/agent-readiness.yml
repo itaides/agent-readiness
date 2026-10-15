@@ -1,17 +1,13 @@
-# This repo's own agent-readiness gate: examples/ci/github-actions.yml applied to the site in site/.
-# It runs examples/ci/agent-readiness-gate.sh as is, so the documented example gets real runs.
-#
-# - build: builds the CLI and the site, serves the site with wrangler dev, and scans it with this
-#   checkout's CLI. Pull requests are compared with main's latest scan and must keep MIN_SCORE.
-# - production: daily, scans the deployed site with the published CLI against its last passing scan.
+# This repo's own agent-readiness gate: the build job of examples/ci/github-actions.yml, applied to the
+# all-pass fixture server in testdata/. It runs examples/ci/agent-readiness-gate.sh as is, so the
+# documented example gets real runs: pull requests are compared with main's latest scan and must keep
+# MIN_SCORE. (The example's production job has no deployed app to watch in this repo.)
 name: Agent readiness
 
 on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    - cron: '17 6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -23,16 +19,12 @@ env:
 
 jobs:
   build:
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       APP_URL: http://127.0.0.1:8787
-      # A content site: the full suite minus the API/auth checks it can't have, plus its opt-in llms.txt and AGENTS.md.
-      SCAN_ARGS: --site-type content --include-llms-txt --include-agents-md
       BASELINE: .agent-readiness/baseline.json
       AGENT_READINESS: node dist/cli.js
-      WRANGLER_SEND_METRICS: 'false'
     steps:
       - uses: actions/checkout@v4
 
@@ -44,17 +36,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build the CLI and the site
-        run: |
-          bun install --frozen-lockfile
-          bun run build
-          cd site && bun install --frozen-lockfile && bun run build
+      - name: Build the CLI
+        run: bun install --frozen-lockfile && bun run build
 
-      - name: Start the site
+      - name: Start the fixture app
         run: |
-          (cd site && npx wrangler dev --ip 127.0.0.1 --port 8787 > ../site.log 2>&1 &)
-          for _ in $(seq 90); do curl -fs -o /dev/null "$APP_URL" && exit 0; sleep 1; done
-          echo "The site didn't respond at $APP_URL within 90s" >&2; cat site.log >&2; exit 1
+          (bun run testdata/serve.ts 8787 > app.log 2>&1 &)
+          for _ in $(seq 30); do curl -fs -o /dev/null "$APP_URL" && exit 0; sleep 1; done
+          echo "The fixture didn't respond at $APP_URL within 30s" >&2; cat app.log >&2; exit 1
 
       - name: Restore baseline from main
         if: github.event_name == 'pull_request'
@@ -91,54 +80,3 @@ jobs:
         with:
           path: .agent-readiness/baseline.json
           key: agent-readiness-build-${{ github.sha }}
-
-  production:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TARGET_URL: ${{ vars.AGENT_READINESS_URL || 'https://agent-readiness-site.itaios052.workers.dev' }}
-      SCAN_ARGS: --site-type content --include-llms-txt --include-agents-md
-      BASELINE: .agent-readiness/production.json
-    steps:
-      # Check out into a subfolder: this repo's package.json is named agent-readiness-cli, so npx run from
-      # the repo root would resolve the published package to this unbuilt checkout instead of npm.
-      - uses: actions/checkout@v4
-        with:
-          path: repo
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Restore last passing scan
-        uses: actions/cache/restore@v4
-        with:
-          path: .agent-readiness/production.json
-          key: agent-readiness-production-${{ github.run_id }}
-          restore-keys: agent-readiness-production-
-
-      - name: Scan
-        run: bash repo/examples/ci/agent-readiness-gate.sh "$TARGET_URL"
-
-      - name: Job summary
-        if: always()
-        run: |
-          if [ -f "$OUT_DIR/report.md" ]; then cat "$OUT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"; fi
-
-      - name: Upload reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: agent-readiness-production
-          path: agent-readiness-report/
-          if-no-files-found: ignore
-
-      - name: Prepare baseline
-        run: mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
-
-      - name: Save baseline
-        uses: actions/cache/save@v4
-        with:
-          path: .agent-readiness/production.json
-          key: agent-readiness-production-${{ github.run_id }}

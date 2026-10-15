@@ -164,11 +164,11 @@ describe('CI workflow examples', () => {
     expect(production.script.join('\n')).toContain('if [ "${status:-0}" = 0 ]');
   });
 
-  it("this repo's workflow runs the example gate script on its own site", async () => {
+  it("this repo's workflow runs the example gate script on the fixture app", async () => {
     const wf = await yaml('.github/workflows/agent-readiness.yml');
     const runs = (wf.jobs.build.steps as Step[]).map((st) => st.run ?? '').join('\n');
     expect(runs).toContain('bash examples/ci/agent-readiness-gate.sh "$APP_URL"');
-    expect(runs).toContain('wrangler dev');
+    expect(runs).toContain('bun run testdata/serve.ts 8787');
     expect(wf.jobs.build.env.APP_URL).toStartWith('http://127.0.0.1');
   });
 });
