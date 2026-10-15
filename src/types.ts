@@ -39,6 +39,8 @@ export interface CheckResult {
   message: string;
   spec: { url: string; asOf: string };
   evidence: Evidence;
+  /** Whether this check counts toward the score. Absent in reports from older versions. */
+  scored?: boolean;
   remediationPromptPath?: string;
   remediation?: {
     suggestion: string;
