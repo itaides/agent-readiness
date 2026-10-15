@@ -44,7 +44,7 @@ describe('site build', () => {
   it('states the real check count and install command', async () => {
     const html = await read('index.html');
     expect(html).toContain(`against ${checks.length} checks`);
-    expect(html).toContain('npm install -g @itaides/agent-readiness');
+    expect(html).toContain('npm install -g agent-readiness-cli');
     expect(html).not.toContain('github:itaides');
     expect(await read('llms.txt')).toContain(`${checks.length} AI-agent readiness checks`);
   });

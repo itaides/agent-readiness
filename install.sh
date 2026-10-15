@@ -5,9 +5,9 @@ set -e
 # Usage:  curl -fsSL https://raw.githubusercontent.com/itaides/agent-readiness/main/install.sh | sh
 
 if command -v npm >/dev/null 2>&1; then
-  npm install -g @itaides/agent-readiness
+  npm install -g agent-readiness-cli
 elif command -v bun >/dev/null 2>&1; then
-  bun add -g @itaides/agent-readiness
+  bun add -g agent-readiness-cli
 else
   echo "agent-readiness needs Node.js 20+ (https://nodejs.org) or Bun (https://bun.sh)." >&2
   exit 1
