@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
   schedule:
     - cron: '23 7 * * 1'
 
@@ -37,8 +37,13 @@ jobs:
       - name: Verify bundle size
         run: |
           size=$(stat -c%s dist/cli.js)
-          echo "Bundle size: $size bytes"
+          total=$(cat dist/*.js | wc -c)
+          echo "Main bundle: $size bytes; all chunks: $total bytes"
           if [ "$size" -gt 102400 ]; then
-            echo "Bundle exceeded 100 KB — investigate before merging" >&2
+            echo "dist/cli.js exceeded 100 KB — investigate before merging" >&2
+            exit 1
+          fi
+          if [ "$total" -gt 153600 ]; then
+            echo "dist/ JavaScript exceeded 150 KB in total — investigate before merging" >&2
             exit 1
           fi

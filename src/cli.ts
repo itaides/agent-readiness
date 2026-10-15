@@ -2,7 +2,7 @@
 import { createHttpClient } from './http';
 import { createTarget } from './target';
 import { scan } from './scanner';
-import { formatHuman, formatJson, formatHtml, formatMarkdown } from './report';
+import { formatHuman, formatJson, formatMarkdown } from './report';
 import { checks, PRESETS } from './registry';
 import type { Check } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
@@ -160,10 +160,11 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
   return { selected: set, warnings };
 }
 
-function render(report: ReturnType<typeof scan> extends Promise<infer R> ? R : never, format: Format): string {
+async function render(report: ReturnType<typeof scan> extends Promise<infer R> ? R : never, format: Format): Promise<string> {
   switch (format) {
     case 'json': return formatJson(report);
-    case 'html': return formatHtml(report);
+    // Loaded on demand so the HTML report stays out of the CLI's main bundle file.
+    case 'html': return (await import('./report-html')).formatHtml(report);
     case 'md': return formatMarkdown(report);
     case 'human':
     default: return formatHuman(report);
@@ -247,7 +248,7 @@ async function main(): Promise<number> {
         verifySkillDigests: args.verifySkillDigests,
       },
     });
-    const out = render(report, args.format);
+    const out = await render(report, args.format);
     process.stdout.write(out);
     if (!out.endsWith('\n')) process.stdout.write('\n');
     if (baselineReport) {
