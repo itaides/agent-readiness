@@ -300,8 +300,9 @@ export const SITE_CSS = String.raw`
     }
     .scan { transition: border-color var(--dur-1), box-shadow var(--dur-2) var(--ease-out), opacity .6s var(--ease-out), translate .6s var(--ease-out); transition-delay: 0s, 0s, 280ms, 280ms; }
     .btn { transition: background-color var(--dur-1), scale var(--dur-1); &:active { scale: .97; } }
+    /* Enter only: panels share one grid cell, so a delayed exit would overlap the incoming panel. */
     .panel {
-      transition: opacity var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out), display var(--dur-3) allow-discrete;
+      transition: opacity var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out);
       @starting-style { opacity: 0; translate: 12px 0; }
     }
     .probe-l li {
