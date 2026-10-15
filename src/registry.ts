@@ -36,6 +36,9 @@ import agentsTxt from './checks/agents-txt';
 import openapiDiscovery from './checks/openapi-discovery';
 import sitemapLastmod from './checks/sitemap-lastmod';
 import rssAtom from './checks/rss-atom';
+import xRobotsTag from './checks/x-robots-tag';
+import tdmrep from './checks/tdmrep';
+import botUaDifferential from './checks/bot-ua-differential';
 
 export const checks: Check[] = [
   robotsTxt,
@@ -58,6 +61,9 @@ export const checks: Check[] = [
   contentSignal,
   aiBotRules,
   botPolicyMatrix,
+  xRobotsTag,
+  tdmrep,
+  botUaDifferential,
   webBotAuth,
   a2aAgentCard,
   agentSkills,
@@ -99,6 +105,9 @@ export const PRESETS: Record<'all' | 'content' | 'api' | 'commerce', string[] | 
     'content-signal',
     'ai-bot-rules',
     'bot-policy-matrix',
+    'x-robots-tag',
+    'tdmrep',
+    'bot-ua-differential',
   ],
   api: [
     'link-header-api-catalog',

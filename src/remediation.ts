@@ -72,6 +72,17 @@ const GUIDANCE: Record<string, Guidance> = {
     suggestion: 'Serve your OpenAPI 3.x spec at a discoverable path (e.g. /openapi.json) or link it from /.well-known/api-catalog.',
     prompt: true,
   },
+  'x-robots-tag': {
+    suggestion: 'Remove restrictive X-Robots-Tag values (noindex, nosnippet, noai) from pages agents should read, or scope them to specific bots intentionally.',
+    prompt: true,
+  },
+  tdmrep: {
+    suggestion: 'Optionally declare a text-and-data-mining policy via /.well-known/tdmrep.json, a TDM-Reservation header, or /ai.txt.',
+  },
+  'bot-ua-differential': {
+    suggestion: 'Check WAF/CDN rules that 403 AI-bot user agents while allowing browsers; allowlist the agents you want instead of blanket-blocking.',
+    prompt: true,
+  },
   'llms-txt': {
     suggestion: 'Publish /llms.txt as text/plain or text/markdown with an H1 and curated links to the most useful agent-facing content.',
     prompt: true,
