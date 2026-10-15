@@ -10,7 +10,7 @@
 #   SCAN_ARGS        Extra CLI flags, split on spaces, e.g. "--crawl 10 --preset content".
 #   SCAN_HEADER      One request header for a protected target, e.g. "Authorization: Bearer $TOKEN" (from a secret).
 #   SCAN_COOKIE      Cookie header value for a protected target (from a secret).
-#   AGENT_READINESS  Command that runs the CLI (default: npx --yes agent-readiness-cli@0.2.0).
+#   AGENT_READINESS  Command that runs the CLI (default: npx --yes agent-readiness-cli@0.3.0).
 #
 # Exit codes: 0 pass, 1 gate failed (score below MIN_SCORE or baseline regression), 2 scan/usage error.
 set -uo pipefail
@@ -24,7 +24,7 @@ if [[ -n "${MIN_SCORE:-}" && ! "$MIN_SCORE" =~ ^[0-9]+$ ]]; then
   usage_error "MIN_SCORE must be a whole number from 0 to 100, got \"$MIN_SCORE\""
 fi
 out="${OUT_DIR:-agent-readiness-report}"
-cli="${AGENT_READINESS:-npx --yes agent-readiness-cli@0.2.0}"
+cli="${AGENT_READINESS:-npx --yes agent-readiness-cli@0.3.0}"
 # Empty-array expansions below use ${a[@]+...} so bash 3.2 (macOS) works under set -u.
 read -r -a extra <<< "${SCAN_ARGS:-}"
 # Credentials go in their own variables: values with spaces would break SCAN_ARGS. The CLI only sends them to the target origin.

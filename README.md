@@ -193,6 +193,21 @@ Markdown output works for PR bodies and Slack threads:
 agent-readiness https://example.com --format md
 ```
 
+### Library (experimental)
+
+The scanner, the check list and the report formatters can be imported from Node 20+ or Bun to run scans in your own program. The entry point is experimental: any 0.x minor release may change it, so pin the version.
+
+```ts
+import { checks, createHttpClient, createTarget, formatHtml, scan } from 'agent-readiness-cli/library';
+
+const target = createTarget({ url: 'https://example.com' });
+const http = createHttpClient({ timeoutMs: 10_000, userAgent: 'my-app', defaultHeaders: {}, insecure: false });
+const report = await scan(target, checks, http, { concurrency: 8, siteType: 'full' });
+console.log(report.score, formatHtml(report).length);
+```
+
+It exports `scan`, `createTarget`, `createHttpClient`, `checks`, `PRESETS`, `NOT_APPLICABLE`, `SITE_TYPES`, `addRemediation`, `formatJson`, `formatMarkdown`, `formatHtml`, `resolveScore`, the report's minified `REPORT_CSS` and `REPORT_JS`, `VERSION`, and the report types. The `browser-agentic` check runs the `lighthouse` command, so leave it out where Lighthouse and Chrome aren't installed.
+
 ---
 
 ## What makes this different
@@ -239,7 +254,7 @@ git clone git@github.com:itaides/agent-readiness.git
 cd agent-readiness
 bun install
 bun test
-bun run build       # dist/cli.js (~50 KB minified) + HTML report chunk
+bun run build       # dist/cli.js + dist/library.js, shared chunks, and dist/types/*.d.ts
 bun run typecheck
 bun run audit:specs
 ```
@@ -249,6 +264,7 @@ Project layout:
 ```
 src/
   cli.ts             # arg parsing + main()
+  library.ts         # the agent-readiness-cli/library entry point
   scanner.ts         # parallel check orchestrator
   http.ts            # fetch wrapper: timeout, redirects, body cap, insecure mode
   target.ts          # URL normalize + locality detection (loopback / RFC1918 / ULA)

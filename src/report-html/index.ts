@@ -2,8 +2,11 @@ import { formatMarkdown } from '../report';
 import type { Category, CheckResult, Evidence, Report, Status } from '../types';
 import { reportCss, reportJs } from './minify' with { type: 'macro' };
 
-const REPORT_CSS = reportCss();
-const REPORT_JS = reportJs();
+// Minified at build time and exported so pages that embed reports can reuse them. Kept behind one
+// object so the minifier doesn't inline the strings where they're used and keep a second copy.
+const ASSETS = { css: reportCss(), js: reportJs() };
+export const REPORT_CSS: string = ASSETS.css;
+export const REPORT_JS: string = ASSETS.js;
 
 const REPO_URL = 'https://github.com/itaides/agent-readiness';
 const CHECKS_DOC_URL = `${REPO_URL}/blob/main/docs/checks.md`;
