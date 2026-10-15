@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- **Website** passes its own content checks (13/14 under `--preset content`): crawler policy in `robots.txt` (Content-Signal plus explicit AI-bot groups), `sitemap.xml`, `sitemap.md`, `llms-full.txt`, `AGENTS.md`, an Agent Skill, TDMRep, JSON-LD, canonical links, a Markdown version of each page, and a Worker that serves them for `Accept: text/markdown`. Styles and scripts moved to same-origin files. The install command is now `npm install -g @itaides/agent-readiness`.
+
 ## [0.1.0] - 2026-10-15
 
 First public release, published to npm as [`@itaides/agent-readiness`](https://www.npmjs.com/package/@itaides/agent-readiness). The command is `agent-readiness`.
