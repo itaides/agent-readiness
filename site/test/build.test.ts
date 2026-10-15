@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { checks } from '../../src/registry';
+import { resolveScore } from '../../src/report-html';
 import { buildSite } from '../src/build';
+import { sampleReport } from '../src/sample-report';
 
 let dir: string;
 const read = (path: string) => readFile(join(dir, path), 'utf8');
@@ -42,10 +44,12 @@ describe('site build', () => {
   it('builds the example from the real registry and keeps landing numbers in sync', async () => {
     const report = JSON.parse(await read('example/report.json'));
     expect(report.checks.map((c: { id: string }) => c.id).sort()).toEqual(checks.map((c) => c.id).sort());
+    const score = resolveScore(sampleReport());
+    if (!score) throw new Error('sample report has no scored checks');
     const landing = await read('index.html');
-    expect(landing).toContain('data-n="75"');
-    expect(landing).toContain('12 of 16 scored checks passing');
-    expect(await read('example/index.html')).toContain('<progress value="75"');
+    expect(landing).toContain(`data-n="${score.value}"`);
+    expect(landing).toContain(`${score.passed} of ${score.total} scored checks passing`);
+    expect(await read('example/index.html')).toContain(`<progress value="${score.value}"`);
   });
 
   it('only links to well-known paths the scanner actually checks', async () => {
