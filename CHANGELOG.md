@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- **`--site-type content`** for docs, blogs and marketing sites: the API, auth and agent-endpoint checks they can't have (API catalog and its Link header, OpenAPI, OAuth AS/PR metadata, A2A card, MCP card, Web Bot Auth) aren't run, are reported as skipped with the reason, and don't count toward the score. Reports record `siteType` and the `notApplicable` ids. Closes [#53](https://github.com/itaides/agent-readiness/issues/53).
 - **HTML reports describe themselves for agents:** a schema.org `Report` JSON-LD block (with `datePublished`, the scanned site and the tool version), a meta description with the score, and Open Graph tags. `formatHtml(report, { canonicalUrl })` adds a canonical link when the publish URL is known; the site's example report uses it, so `/example/` now passes the JSON-LD, freshness and page-readability checks.
 
 ### Changed
