@@ -54,6 +54,24 @@ const GUIDANCE: Record<string, Guidance> = {
   'sitemap-md': {
     suggestion: 'Optionally publish /sitemap.md — a markdown index of documentation pages agents can keep reading from.',
   },
+  'agents-md': {
+    suggestion: 'Publish /AGENTS.md with install, config, and usage sections so coding agents can work with your product correctly.',
+    prompt: true,
+    verify: (target) => `agent-readiness ${target} --only agents-md --include-agents-md`,
+  },
+  'sitemap-lastmod': {
+    suggestion: 'Add <lastmod> to sitemap <url> entries — agents use it as a freshness signal when deciding what to fetch and cite.',
+  },
+  'rss-atom': {
+    suggestion: 'Optionally expose an RSS/Atom feed and advertise it with <link rel="alternate" type="application/rss+xml">.',
+  },
+  'agents-txt': {
+    suggestion: 'If adopting the agents.txt convention, serve /agents.txt (and companion /agents.json) declaring supported agent protocols.',
+  },
+  'openapi-discovery': {
+    suggestion: 'Serve your OpenAPI 3.x spec at a discoverable path (e.g. /openapi.json) or link it from /.well-known/api-catalog.',
+    prompt: true,
+  },
   'llms-txt': {
     suggestion: 'Publish /llms.txt as text/plain or text/markdown with an H1 and curated links to the most useful agent-facing content.',
     prompt: true,
