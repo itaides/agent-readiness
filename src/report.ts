@@ -1,4 +1,3 @@
-import { renderHtml } from './report-html';
 import type { Report, Status } from './types';
 
 const ICON: Record<Status, string> = {
@@ -35,10 +34,6 @@ export function formatHuman(report: Report): string {
 
 export function formatJson(report: Report): string {
   return JSON.stringify(report, null, 2);
-}
-
-export function formatHtml(report: Report): string {
-  return renderHtml(report, formatMarkdown(report));
 }
 
 export function formatMarkdown(report: Report): string {

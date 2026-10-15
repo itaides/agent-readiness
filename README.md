@@ -174,7 +174,7 @@ The default scan uses HTTP and DNS signals and runs against `http://localhost:30
 SPA dev servers return `200 OK` + `text/html` for any path, including `/.well-known/*` paths that should be JSON. A naive scanner ("did we get 200?") reports these as passing. Every JSON check here validates the content-type **and** parses the body **and** checks required fields before claiming a pass. The same logic catches partial implementations in production — a real well-known endpoint serving JSON that's missing required fields fails for the right reason.
 
 ### Fast feedback
-A default HTTP/DNS scan finishes quickly against a typical site. The core CLI remains a single-file ~60 KB minified JS bundle; Lighthouse is an optional runtime dependency used only by `--browser`.
+A default HTTP/DNS scan finishes quickly against a typical site. The core CLI is a ~50 KB minified JS bundle, and the HTML report is a separate ~45 KB file loaded only for `--format html`; Lighthouse is an optional runtime dependency used only by `--browser`.
 
 ### Regression-only CI gates
 Save a JSON report, then use it as a baseline. Existing failures remain visible but do not break the build; a pass→fail transition or a newly introduced failure exits 1.
@@ -190,7 +190,7 @@ agent-readiness https://staging.example.com --baseline readiness-baseline.json
 
 The tool has no analytics or telemetry. Default scans contact only the target origin plus its DNS resolver; explicit flags may load the content page in Chrome, contact a supplied MCP/commerce URL, or fetch skill artifact URLs advertised by the target. See [`PRIVACY.md`](PRIVACY.md).
 
-The code in this repository is the code that runs on your machine. The core build artifact (`dist/cli.js`) is a single ~60 KB minified bundle, built directly from `src/`.
+The code in this repository is the code that runs on your machine. The build output in `dist/` is minified JavaScript, built directly from `src/`: `cli.js` (~50 KB) plus a chunk for the HTML report that loads only with `--format html`.
 
 ---
 
@@ -207,7 +207,7 @@ git clone git@github.com:itaides/agent-readiness.git
 cd agent-readiness
 bun install
 bun test
-bun run build       # dist/cli.js — single ~60 KB minified bundle
+bun run build       # dist/cli.js (~50 KB minified) + HTML report chunk
 bun run typecheck
 bun run audit:specs
 ```

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 
-import { formatHtml } from '../src/report';
-import { highlightJson, pointGains, resolveScore } from '../src/report-html';
+import { formatHtml, highlightJson, pointGains, resolveScore } from '../src/report-html';
+import { minifyCss } from '../src/report-html/minify';
 import type { Category, CheckResult, Report, Status } from '../src/types';
 
 function check(id: string, category: Category, status: Status, extra: Partial<CheckResult> = {}): CheckResult {
@@ -160,5 +160,12 @@ describe('highlightJson', () => {
     expect(out).toContain('<span class="j-k">&quot;status&quot;</span>:');
     expect(out).toContain('<span class="j-n">404</span>');
     expect(out).toContain('<span class="j-s">&quot;&lt;x&gt;&quot;</span>');
+  });
+});
+
+describe('minifyCss', () => {
+  it('drops comments and whitespace but keeps strings and descendant combinators', () => {
+    const css = `/* note */\n.ar :is(.row, .group) {\n  color: red;\n  &::before { content: " of  \\B7 "; }\n}\n`;
+    expect(minifyCss(css)).toBe('.ar :is(.row,.group){color:red;&::before{content:" of  \\B7 "}}');
   });
 });
