@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/itaides/agent-readiness/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <a href="https://www.npmjs.com/package/@itaides/agent-readiness"><img src="https://img.shields.io/npm/v/@itaides/agent-readiness.svg" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/agent-readiness-cli"><img src="https://img.shields.io/npm/v/agent-readiness-cli.svg" alt="npm version"></a>
   <img src="https://img.shields.io/badge/node-20%2B-black?logo=node.js" alt="Node 20+">
   <img src="https://img.shields.io/badge/checks-39-blue" alt="39 checks">
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
@@ -46,14 +46,14 @@ scanned          2026-05-20T07:31:09Z
 Run it without installing (Node 20+ or Bun):
 
 ```sh
-npx @itaides/agent-readiness https://example.com
-bunx @itaides/agent-readiness https://example.com
+npx agent-readiness-cli https://example.com
+bunx agent-readiness-cli https://example.com
 ```
 
 Or install the `agent-readiness` command globally:
 
 ```sh
-npm install -g @itaides/agent-readiness
+npm install -g agent-readiness-cli
 agent-readiness https://example.com
 ```
 

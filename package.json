@@ -1,5 +1,5 @@
 {
-  "name": "@itaides/agent-readiness",
+  "name": "agent-readiness-cli",
   "version": "0.1.0",
   "description": "CLI that checks whether a website is ready for AI agents — locally, in CI, or in production.",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "cloudflare"
   ],
   "bin": {
-    "agent-readiness": "dist/cli.js"
+    "agent-readiness": "dist/cli.js",
+    "agent-readiness-cli": "dist/cli.js"
   },
   "files": [
     "dist",
