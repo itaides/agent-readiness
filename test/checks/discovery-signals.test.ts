@@ -31,6 +31,8 @@ describe('sitemap-lastmod', () => {
   it('warns at 79.5%, which must not round up to a pass', async () => {
     const result = await sitemapLastmod.run(target, site({ '/sitemap.xml': response(200, sitemap(200, 159), 'application/xml') }));
     expect(result.status).toBe('warn');
+    // The message mustn't show the threshold for a near miss.
+    expect(result.message).toContain('159/200 URLs carry lastmod (79%)');
   });
   it('follows the Sitemap directive in robots.txt', async () => {
     const http = site({
