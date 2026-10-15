@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "agent-readiness-site",
+  // Static assets only for now; the /scan Worker lands in a follow-up.
+  "compatibility_date": "2026-10-14",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
