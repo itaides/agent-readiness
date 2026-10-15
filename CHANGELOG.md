@@ -24,6 +24,7 @@ All notable changes to this project are documented here. The format follows [Kee
   - `md` produces a GitHub-flavored report suitable for PR comments and Slack threads ([#2](https://github.com/itaides/agent-readiness/pull/2))
 - **JSON report**: each check result now includes `scored`; `score` and `crawl` are accepted when present.
 - **Build**: `dist/cli.js` is minified, and the HTML report is a separate chunk loaded only for `--format html`, with its inline CSS and JS minified at build time. CI caps `dist/cli.js` at 100 KB and all of `dist/`'s JavaScript at 150 KB.
+- **Website** (`site/`): landing page, example report and a `/scan/` placeholder, built as static assets for Cloudflare Workers. The example report is generated from the real check registry.
 - **Check selection**: `--preset all|content|api|commerce`, `--only`, `--skip`, `--list-checks`, `--include-llms-txt`, `--include-auth-md`, `--commerce-url`, `--mcp-url`, and `--browser`.
 - **Strict response shape validation** — JSON checks reject SPA-fallthrough responses (`200` + `text/html`) and partial implementations (JSON parses but required fields missing). Catches real production bugs that naive "did we get 200?" scanners miss.
 - HTTP client: per-request timeout (5 s default), redirect cap (5 hops), body size cap (5 MB), TLS posture auto-toggled for loopback / RFC 1918 / IPv6 ULA hosts.
