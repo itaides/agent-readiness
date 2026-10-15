@@ -210,21 +210,27 @@ export const SITE_CSS = String.raw`
     @container page (inline-size >= 900px) { flex-direction: column; overflow: visible; border-block-end: 0; border-inline-end: 1px solid var(--border); }
   }
   .tab {
-    position: relative; flex: none; display: grid; gap: 2px; padding: 14px 18px; cursor: pointer; color: var(--muted);
-    border-inline-start: 2px solid transparent;
+    position: relative; isolation: isolate; flex: none; display: grid; gap: 2px; padding: 14px 18px; cursor: pointer; color: var(--muted);
     & input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
     & .tab-q { display: none; font-size: 13px; }
     &:not(:first-of-type) { border-block-start: 1px solid transparent; }
     &:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
     &:has(:checked), .tabs:not(:has(:checked)) &:first-of-type {
-      color: var(--fg); background: var(--sunken); border-inline-start-color: var(--accent);
+      color: var(--fg);
       & .tab-n { color: var(--accent); }
+      & .tab-ind { display: block; }
     }
     @container page (inline-size >= 900px) {
       padding: 18px 22px;
       &:not(:first-of-type) { border-block-start-color: var(--border); }
       & .tab-q { display: block; }
     }
+  }
+  /* The active highlight is its own element so a view transition can slide it between tabs. */
+  .tab-ind {
+    display: none; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: var(--sunken); border-block-end: 2px solid var(--accent);
+    @container page (inline-size >= 900px) { border-block-end: 0; border-inline-start: 2px solid var(--accent); }
   }
   .tab-n { font: 600 11px var(--mono); letter-spacing: .06em; color: var(--faint); }
   .tab-t { font-weight: 650; font-size: 15px; }
@@ -278,6 +284,30 @@ export const SITE_CSS = String.raw`
   @keyframes count-up { from { --n: 0; } }
   @view-transition { navigation: auto; }
   .ring { view-transition-name: score-ring; }
+
+  /* Tab switch as a same-document view transition (started from site.js). */
+  .panels { view-transition-name: pillar-panel; }
+  .tab:has(:checked) .tab-ind, .tabs:not(:has(:checked)) .tab:first-of-type .tab-ind { view-transition-name: pillar-tab; }
+  @keyframes pillar-out { to { opacity: 0; } }
+  @keyframes pillar-in { from { opacity: 0; translate: 24px 0; } }
+  @keyframes pillar-in-back { from { opacity: 0; translate: -24px 0; } }
+  ::view-transition-group(pillar-panel) { overflow: clip; animation-duration: .42s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+  ::view-transition-old(pillar-panel), ::view-transition-new(pillar-panel) {
+    /* Panels differ in height: keep both snapshots unscaled and top-aligned instead of stretching text. */
+    block-size: 100%; object-fit: none; object-position: top left;
+  }
+  ::view-transition-old(pillar-panel) { animation: pillar-out .12s ease-in both; }
+  /* Sequential, not a crossfade: two text panels on top of each other read as overlap. */
+  ::view-transition-new(pillar-panel) { animation: pillar-in .32s cubic-bezier(.2, .7, .2, 1) .1s both; }
+  :root:active-view-transition-type(backward)::view-transition-new(pillar-panel) { animation-name: pillar-in-back; }
+  ::view-transition-group(pillar-tab) { animation-duration: .3s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+  /* The view transition animates the switch; skip the CSS-only fallback animations meanwhile. */
+  :root:active-view-transition :is(.panel, .tab, .probe-l li) { transition: none; }
+  /* score-ring is for cross-page navigation only; keep it out of tab switches. */
+  :root:active-view-transition-type(pillar) .ring { view-transition-name: none; }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  }
   @keyframes rise { from { opacity: 0; translate: 0 20px; } }
   @keyframes fill { from { --value: 0; } }
   @keyframes caret { 50% { opacity: 0; } }
@@ -310,7 +340,7 @@ export const SITE_CSS = String.raw`
       transition-delay: calc(150ms + sibling-index() * 90ms);
       @starting-style { opacity: 0; translate: 0 4px; }
     }
-    .tab { transition: background-color var(--dur-1), color var(--dur-1), border-color var(--dur-2); }
+    .tab { transition: color var(--dur-1); }
     .term-line:last-child code::after {
       content: ""; display: inline-block; inline-size: .55em; block-size: 1.1em; vertical-align: -.2em;
       margin-inline-start: 3px; background: var(--accent); animation: caret 1.1s steps(1) infinite;
