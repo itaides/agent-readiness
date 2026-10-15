@@ -122,6 +122,8 @@ const HTML_PAGE = `<!doctype html><html lang="en"><head>
 <script>navigator.modelContext.registerTool({name:"x"});</script>
 </body></html>`;
 
+const SITEMAP_MD = `# Fixture docs\n\n- [Article 1](/article-1.md)\n`;
+
 const AUTH_MD = `# auth.md
 
 ## Discover
@@ -135,7 +137,7 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
 
   if (url === '/' || url === '/article-1' || url === '/article-2') {
     if (/text\/markdown/i.test(accept)) {
-      res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
+      res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept' });
       res.end(MARKDOWN_PAGE);
       return;
     }
@@ -146,6 +148,16 @@ function passHandler(req: IncomingMessage, res: ServerResponse, baseUrl: string)
       'last-modified': 'Wed, 01 Oct 2026 00:00:00 GMT',
     });
     res.end(HTML_PAGE.replaceAll('%BASE_URL%', baseUrl));
+    return;
+  }
+  if (url === '/index.md' || url === '/article-1.md' || url === '/article-2.md') {
+    res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
+    res.end(MARKDOWN_PAGE);
+    return;
+  }
+  if (url === '/sitemap.md') {
+    res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' });
+    res.end(SITEMAP_MD);
     return;
   }
   if (url === '/robots.txt') {
