@@ -4,6 +4,7 @@ import { createTarget } from './target';
 import { scan } from './scanner';
 import { formatHuman, formatJson, formatMarkdown } from './report';
 import { checks, PRESETS } from './registry';
+import { crawlPages } from './crawl';
 import type { Check } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
 
@@ -25,6 +26,7 @@ interface Args {
   includeLlmsTxt: boolean;
   includeAuthMd: boolean;
   includeAgentsMd: boolean;
+  crawl: number;
   browser: boolean;
   verifySkillDigests: boolean;
   baseline?: string;
@@ -46,6 +48,7 @@ Options:
   --include-llms-txt            Include the opt-in llms.txt and llms-full.txt checks
   --include-auth-md             Include the API-focused auth.md check
   --include-agents-md           Include the opt-in AGENTS.md check
+  --crawl <n>                   Sample up to n sitemap pages and aggregate page-level checks
   --content-url <url>           Page used for content and browser checks
   --commerce-url <url>          Paid resource used for UCP/x402/MPP checks
   --mcp-url <url>               MCP HTTP endpoint used for server/discover
@@ -77,6 +80,7 @@ function parseArgs(argv: string[]): Args {
     includeLlmsTxt: false,
     includeAuthMd: false,
     includeAgentsMd: false,
+    crawl: 0,
     browser: false,
     verifySkillDigests: false,
     preset: 'all',
@@ -95,6 +99,7 @@ function parseArgs(argv: string[]): Args {
       case '--include-llms-txt': args.includeLlmsTxt = true; break;
       case '--include-auth-md': args.includeAuthMd = true; break;
       case '--include-agents-md': args.includeAgentsMd = true; break;
+      case '--crawl': args.crawl = Number(argv[++i]) || 0; break;
       case '--content-url': args.contentUrl = argv[++i]; break;
       case '--commerce-url': args.commerceUrl = argv[++i]; break;
       case '--mcp-url': args.mcpUrl = argv[++i]; break;
@@ -248,6 +253,13 @@ async function main(): Promise<number> {
         verifySkillDigests: args.verifySkillDigests,
       },
     });
+    if (args.crawl > 0) {
+      const pageChecks = selected.filter((c) => c.pageScoped);
+      report.crawl = await crawlPages(target, pageChecks, http, args.crawl, {
+        verifySkillDigests: args.verifySkillDigests,
+      });
+      if (!report.crawl) console.error('warning: --crawl found no sitemap URLs to sample');
+    }
     const out = await render(report, args.format);
     process.stdout.write(out);
     if (!out.endsWith('\n')) process.stdout.write('\n');

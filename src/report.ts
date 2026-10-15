@@ -11,6 +11,9 @@ export function formatHuman(report: Report): string {
   const lines: string[] = [];
   lines.push(`agent-readiness  ${report.target}`);
   lines.push(`scanned          ${report.scannedAt}`);
+  if (report.score) {
+    lines.push(`score            ${report.score.value}/100 (${report.score.grade}) — ${report.score.passed}/${report.score.total} scored checks passing`);
+  }
   lines.push('');
 
   const cats = (Object.keys(report.summary) as Array<keyof typeof report.summary>)
@@ -29,6 +32,14 @@ export function formatHuman(report: Report): string {
     }
     lines.push('');
   }
+
+  if (report.crawl) {
+    lines.push(`[crawl] ${report.crawl.pages.length} sampled pages`);
+    for (const [id, stat] of Object.entries(report.crawl.perCheck)) {
+      lines.push(`  ${id.padEnd(28)} pass ${stat.pass}  warn ${stat.warn}  fail ${stat.fail}`);
+    }
+    lines.push('');
+  }
   return lines.join('\n');
 }
 
@@ -41,6 +52,10 @@ export function formatMarkdown(report: Report): string {
   lines.push(`# agent-readiness — ${report.target}`);
   lines.push('');
   lines.push(`Scanned ${report.scannedAt} · ${report.tool.name} ${report.tool.version}`);
+  if (report.score) {
+    lines.push('');
+    lines.push(`**Score: ${report.score.value}/100 (${report.score.grade})** — ${report.score.passed}/${report.score.total} scored checks passing`);
+  }
   lines.push('');
 
   lines.push('| Category | Passing |');
@@ -64,6 +79,16 @@ export function formatMarkdown(report: Report): string {
         lines.push(`  - **How to fix:** ${c.remediation.suggestion}`);
         lines.push(`  - **Verify:** \`${c.remediation.verifyCommand}\``);
       }
+    }
+    lines.push('');
+  }
+  if (report.crawl) {
+    lines.push('## crawl — sampled pages');
+    lines.push('');
+    lines.push('| Check | Pass | Warn | Fail |');
+    lines.push('|---|---|---|---|');
+    for (const [id, s] of Object.entries(report.crawl.perCheck)) {
+      lines.push(`| ${id} | ${s.pass} | ${s.warn} | ${s.fail} |`);
     }
     lines.push('');
   }

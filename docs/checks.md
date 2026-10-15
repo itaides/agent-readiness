@@ -215,3 +215,11 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 | **Total** | **39** | **30** | **19** |
 
 `llms-txt`, `llms-full-txt`, and `agents-md` raise the scored total to 22. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
+
+## Aggregate score
+
+Every report includes `score`: `passed / total × 100` over scored checks (statuses pass|fail only), plus a letter grade (A+ ≥97, A ≥90, B ≥80, C ≥70, D ≥50, F <50). Informational and skipped checks never count.
+
+## Crawl sampling
+
+`--crawl <n>` samples up to `n` URLs evenly across the discovered sitemap and runs the page-scoped checks (`pageScoped` on the check) against each, aggregating per-check pass/warn/fail counts under `report.crawl`. It shares the scan's HTTP client, timeouts, and injected headers.
