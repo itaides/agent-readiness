@@ -15,6 +15,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- **Sitemap indexes are followed.** `sitemap-lastmod` and `--crawl` read the first sitemap only, so a site whose sitemap is an index got a false "no `<url>` entries" warning, and the crawl sampled sitemap files as if they were pages. Both now read up to 10 same-origin child sitemaps. Found scanning eventimio.ai: lastmod went from a false warning to 85/85 URLs, and the crawl now samples real pages.
+- **`bot-ua-differential` recognises Markdown served to AI bots.** A site that answers GPTBot and ClaudeBot with a Markdown version of an HTML page was reported as "degraded" (2% of the browser body size). A 200 Markdown response of real content now passes as an alternate format; thin Markdown still warns, and blocking still fails.
+
 - **`sitemap-lastmod`** passed at 79.5% coverage because it rounded the percentage before comparing; it now passes only at 80% or more, as documented.
 
 ## [0.1.0] - 2026-10-15

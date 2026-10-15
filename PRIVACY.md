@@ -17,7 +17,7 @@ The default scan contacts the supplied origin and standard paths below it:
 - `/.well-known/webmcp`;
 - the input URL or explicit `--content-url` for Markdown negotiation and response-header checks.
 
-It also asks the operating system's configured DNS resolver for `_index._agents.<target-host>` unless the target is local/private. Redirects are followed up to five hops. A sitemap URL advertised by the target may point to another origin. `--crawl <n>` samples only sitemap pages on the target's own origin.
+It also asks the operating system's configured DNS resolver for `_index._agents.<target-host>` unless the target is local/private. Redirects are followed up to five hops. A sitemap URL advertised by the target may point to another origin. When the sitemap is an index, up to 10 of the sitemaps it lists are read, and only those on the target's origin. `--crawl <n>` samples only sitemap pages on the target's own origin.
 
 ## Explicit network expansion
 
