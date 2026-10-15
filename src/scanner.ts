@@ -47,7 +47,11 @@ export async function scan(
       }),
     ),
   );
-  const results = rawResults.map((result) => addRemediation(result, target.origin.toString()));
+  const scoredIds = new Set(checks.filter((check) => check.scored).map((check) => check.id));
+  const results = rawResults.map((result) => ({
+    ...addRemediation(result, target.origin.toString()),
+    scored: scoredIds.has(result.id),
+  }));
 
   return {
     version: 1,
