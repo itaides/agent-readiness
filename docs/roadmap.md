@@ -14,6 +14,11 @@ Updated 2026-08-04. A feature moves into scored defaults only when its public de
 - Explicit-scope UCP, x402 v2, and MPP commerce checks.
 - Read-only MCP 2026-07-28 `server/discover` probe.
 - Regression-only `--baseline`, spec staleness audit, and remediation prompt package.
+- Page-level readability: `page-html-quality`, `json-ld`, `freshness-signals`, `semantic-controls`.
+- Markdown layer: `markdown-mirror`, `markdown-link-rel`, `llms-full-txt`, `sitemap-md`, `Vary: Accept` correctness on content negotiation.
+- Discovery and instruction files: `agents-md` (opt-in), `agents-txt`/`agents.json`, `openapi-discovery`, `sitemap-lastmod`, `rss-atom`.
+- Bot-blocking detection: `x-robots-tag`, `tdmrep`, `bot-ua-differential`.
+- 0–100 score with letter grade on every report, and `--crawl <n>` sampled multi-page aggregation.
 
 ## Stabilization work
 
