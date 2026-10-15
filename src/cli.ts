@@ -7,6 +7,7 @@ import { checks, PRESETS } from './registry';
 import { crawlPages } from './crawl';
 import type { Check } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
+import { VERSION } from './version';
 
 type PresetName = 'all' | 'content' | 'api' | 'commerce';
 
@@ -35,6 +36,7 @@ interface Args {
   skip?: string[];
   listChecks: boolean;
   help: boolean;
+  version: boolean;
 }
 
 const HELP = `Usage: agent-readiness <url> [options]
@@ -62,6 +64,7 @@ Options:
   --user-agent <ua>             Spoof User-Agent (e.g. "GPTBot/1.0")
   --header "K: V"               Inject a request header (repeatable)
   --cookie <value>              Send a Cookie header to the target
+  --version, -v                 Print the version and exit
   --help, -h                    Show this help
 `;
 
@@ -86,11 +89,13 @@ function parseArgs(argv: string[]): Args {
     preset: 'all',
     listChecks: false,
     help: false,
+    version: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     switch (a) {
       case '--help': case '-h': args.help = true; break;
+      case '--version': case '-v': args.version = true; break;
       case '--list-checks': args.listChecks = true; break;
       case '--format': args.format = (argv[++i] ?? 'human') as Format; break;
       case '--timeout': args.timeoutMs = Number(argv[++i]); break;
@@ -200,6 +205,10 @@ function printChecksList(all: Check[]): void {
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
 
+  if (args.version) {
+    console.log(VERSION);
+    return 0;
+  }
   if (args.help) {
     console.log(HELP);
     return 0;
@@ -239,7 +248,7 @@ async function main(): Promise<number> {
 
   const http = createHttpClient({
     timeoutMs: args.timeoutMs,
-    userAgent: args.userAgent ?? 'agent-readiness/0.0.1 (+https://github.com/agent-readiness/cli)',
+    userAgent: args.userAgent ?? `agent-readiness/${VERSION} (+https://github.com/itaides/agent-readiness)`,
     defaultHeaders: args.headers,
     insecure: args.insecure || target.isLocal,
   });

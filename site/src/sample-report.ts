@@ -1,6 +1,7 @@
 import { checks } from '../../src/registry';
 import { addRemediation } from '../../src/remediation';
 import type { Category, CheckResult, Evidence, Report, Status } from '../../src/types';
+import { VERSION } from '../../src/version';
 
 /**
  * The example report shown on the landing page. Check ids, titles, categories and
@@ -97,7 +98,7 @@ export function sampleReport(): Report {
     version: 1,
     target: SAMPLE_TARGET,
     scannedAt: '2026-10-14T09:42:18.000Z',
-    tool: { name: 'agent-readiness', version: '0.0.1' },
+    tool: { name: 'agent-readiness', version: VERSION },
     summary,
     checks: results,
   };

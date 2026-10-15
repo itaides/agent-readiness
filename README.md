@@ -2,7 +2,8 @@
 
 <p align="center">
   <a href="https://github.com/itaides/agent-readiness/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/runtime-bun%201.1%2B-black?logo=bun" alt="Bun 1.1+">
+  <a href="https://www.npmjs.com/package/@itaides/agent-readiness"><img src="https://img.shields.io/npm/v/@itaides/agent-readiness.svg" alt="npm version"></a>
+  <img src="https://img.shields.io/badge/node-20%2B-black?logo=node.js" alt="Node 20+">
   <img src="https://img.shields.io/badge/checks-39-blue" alt="39 checks">
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
 </p>
@@ -42,20 +43,28 @@ scanned          2026-05-20T07:31:09Z
 
 ## Install
 
-The repo is private for now. Clone and link:
+Run it without installing (Node 20+ or Bun):
 
 ```sh
-git clone git@github.com:itaides/agent-readiness.git
-cd agent-readiness
-bun install
-bun link
+npx @itaides/agent-readiness https://example.com
+bunx @itaides/agent-readiness https://example.com
+```
+
+Or install the `agent-readiness` command globally:
+
+```sh
+npm install -g @itaides/agent-readiness
 agent-readiness https://example.com
 ```
 
-When the repo flips public, the one-liner becomes:
+From source (needs Bun 1.1+):
 
 ```sh
-bun install -g github:itaides/agent-readiness
+git clone https://github.com/itaides/agent-readiness.git
+cd agent-readiness
+bun install
+bun run build
+bun link
 ```
 
 Scanning a local dev server (HTTPS with self-signed cert, RFC1918, IPv6 loopback — all handled):
@@ -152,6 +161,7 @@ agent-readiness <url> [options]
   --user-agent <ua>             Spoof UA (e.g. "GPTBot/1.0")
   --header "K: V"               Inject a request header (repeatable)
   --cookie <value>              Send a Cookie header to the target
+  --version, -v                 Print the version and exit
 ```
 
 JSON output is pipeable and diffable:
