@@ -1,0 +1,37 @@
+# Add to .gitlab-ci.yml and copy agent-readiness-gate.sh to scripts/.
+# Set the CI/CD variable AGENT_READINESS_URL to a stable URL (staging or production).
+#
+# Merge requests read the baseline cached by the default branch; the default branch refreshes it.
+agent-readiness:
+  image: node:22
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        CACHE_POLICY: pull
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        CACHE_POLICY: pull-push
+  variables:
+    MIN_SCORE: "70"
+    BASELINE: .agent-readiness/baseline.json
+    OUT_DIR: agent-readiness-report
+  cache:
+    key: agent-readiness-baseline
+    paths:
+      - .agent-readiness/
+    policy: $CACHE_POLICY
+    when: always
+  script:
+    - bash scripts/agent-readiness-gate.sh "$AGENT_READINESS_URL" || status=$?
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] && [ -f "$OUT_DIR/report.json" ]; then
+        mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
+      fi
+    - exit "${status:-0}"
+  artifacts:
+    when: always
+    expose_as: agent-readiness report
+    paths:
+      - agent-readiness-report/
+    expire_in: 30 days

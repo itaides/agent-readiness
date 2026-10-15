@@ -212,6 +212,8 @@ agent-readiness https://staging.example.com --format json > readiness-baseline.j
 agent-readiness https://staging.example.com --baseline readiness-baseline.json
 ```
 
+Ready-made, tested setups for GitHub Actions and GitLab CI (PR gate, minimum score, report artifacts, baseline from `main`) are in [`docs/ci.md`](docs/ci.md).
+
 ---
 
 ## Privacy

@@ -1,0 +1,71 @@
+# Copy to .github/workflows/agent-readiness.yml and copy agent-readiness-gate.sh to scripts/.
+# Set the repository variable AGENT_READINESS_URL to a stable URL (staging or production).
+#
+# - Pull requests: scan, fail on regressions against the latest main baseline or a score below MIN_SCORE,
+#   upload the HTML/JSON/Markdown reports, and write the Markdown report to the job summary.
+# - Pushes to main: scan and save the report as the new baseline (via the Actions cache).
+name: Agent readiness
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  agent-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_URL: ${{ vars.AGENT_READINESS_URL }}
+      MIN_SCORE: '70'
+      BASELINE: .agent-readiness/baseline.json
+      OUT_DIR: agent-readiness-report
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # PRs compare against the newest baseline saved from main. On a cache miss the gate
+      # skips the regression check and still enforces MIN_SCORE.
+      - name: Restore baseline from main
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: .agent-readiness/baseline.json
+          key: agent-readiness-baseline-${{ github.sha }}
+          restore-keys: agent-readiness-baseline-
+
+      - name: Scan
+        run: bash scripts/agent-readiness-gate.sh "$TARGET_URL"
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f "$OUT_DIR/report.md" ]; then cat "$OUT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-readiness-report
+          path: agent-readiness-report/
+          if-no-files-found: ignore
+
+      # Save main's result as the baseline even when main itself fails MIN_SCORE.
+      - name: Prepare baseline
+        id: baseline
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && hashFiles('agent-readiness-report/report.json') != '' }}
+        run: mkdir -p .agent-readiness && cp "$OUT_DIR/report.json" "$BASELINE"
+
+      - name: Save baseline
+        if: ${{ !cancelled() && steps.baseline.outcome == 'success' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .agent-readiness/baseline.json
+          key: agent-readiness-baseline-${{ github.sha }}
