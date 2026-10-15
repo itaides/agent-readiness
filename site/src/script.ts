@@ -22,7 +22,8 @@ export const SITE_JS = String.raw`(() => {
     const direction = radios.indexOf(input) > from ? 'forward' : 'backward';
     const update = () => {
       input.checked = true;
-      input.focus({ preventScroll: true });
+      // Mouse selection: keep focus on the radio for keyboard follow-up, without a focus ring.
+      input.focus({ preventScroll: true, focusVisible: false });
       reveal(input);
     };
     try {

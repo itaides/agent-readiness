@@ -211,12 +211,15 @@ export const SITE_CSS = String.raw`
   }
   .tab {
     position: relative; isolation: isolate; flex: none; display: grid; gap: 2px; padding: 14px 18px; cursor: pointer; color: var(--muted);
-    & input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
+    /* Clicks go to the label, not the radio: a clicked radio is already checked when click handlers
+       run, so site.js couldn't tell a new selection and the view transition never started. Keyboard
+       focus and arrow keys still use the radio. */
+    & input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; pointer-events: none; }
     & .tab-q { display: none; font-size: 13px; }
     &:not(:first-of-type) { border-block-start: 1px solid transparent; }
     &:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
     &:has(:checked), .tabs:not(:has(:checked)) &:first-of-type {
-      color: var(--fg);
+      color: var(--fg); background: var(--sunken);
       & .tab-n { color: var(--accent); }
       & .tab-ind { display: block; }
     }
@@ -226,11 +229,13 @@ export const SITE_CSS = String.raw`
       & .tab-q { display: block; }
     }
   }
-  /* The active highlight is its own element so a view transition can slide it between tabs. */
+  /* The active accent bar is its own element so a view transition can slide it between tabs. It stays
+     a thin bar: transition snapshots paint above the page, so a full-size highlight would cover the
+     tab labels while it moves. The selected tab's background changes with the page instead. */
   .tab-ind {
-    display: none; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background: var(--sunken); border-block-end: 2px solid var(--accent);
-    @container page (inline-size >= 900px) { border-block-end: 0; border-inline-start: 2px solid var(--accent); }
+    display: none; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 2px; pointer-events: none;
+    background: var(--accent);
+    @container page (inline-size >= 900px) { inset-inline-end: auto; inset-block: 0; inline-size: 2px; block-size: auto; }
   }
   .tab-n { font: 600 11px var(--mono); letter-spacing: .06em; color: var(--faint); }
   .tab-t { font-weight: 650; font-size: 15px; }
@@ -340,7 +345,7 @@ export const SITE_CSS = String.raw`
       transition-delay: calc(150ms + sibling-index() * 90ms);
       @starting-style { opacity: 0; translate: 0 4px; }
     }
-    .tab { transition: color var(--dur-1); }
+    .tab { transition: color var(--dur-1), background-color var(--dur-1); }
     .term-line:last-child code::after {
       content: ""; display: inline-block; inline-size: .55em; block-size: 1.1em; vertical-align: -.2em;
       margin-inline-start: 3px; background: var(--accent); animation: caret 1.1s steps(1) infinite;
