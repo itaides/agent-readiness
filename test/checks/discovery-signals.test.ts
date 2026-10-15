@@ -46,10 +46,27 @@ describe('sitemap-lastmod', () => {
   it('warns when there is no sitemap', async () => {
     expect((await sitemapLastmod.run(target, site({}))).message).toBe('No sitemap to inspect for lastmod coverage');
   });
-  it('warns on a sitemap index or an SPA fallthrough without <url> entries', async () => {
-    const index = '<?xml version="1.0"?><sitemapindex><sitemap><loc>https://example.com/s1.xml</loc></sitemap></sitemapindex>';
-    expect((await sitemapLastmod.run(target, site({ '/sitemap.xml': response(200, index, 'application/xml') }))).message).toContain('index or has no <url>');
+  it('warns on an SPA fallthrough without <url> entries', async () => {
     expect((await sitemapLastmod.run(target, site({ '/sitemap.xml': response(200, '<html></html>', 'text/html') }))).status).toBe('warn');
+  });
+
+  it('follows a sitemap index to its sitemaps', async () => {
+    const index = '<?xml version="1.0"?><sitemapindex><sitemap><loc>https://example.com/s1.xml</loc><lastmod>2026-10-01</lastmod></sitemap><sitemap><loc>https://example.com/s2.xml</loc></sitemap></sitemapindex>';
+    const result = await sitemapLastmod.run(target, site({
+      '/sitemap.xml': response(200, index, 'application/xml'),
+      '/s1.xml': response(200, sitemap(4, 4), 'application/xml'),
+      '/s2.xml': response(200, sitemap(4, 3), 'application/xml'),
+    }));
+    // 7 of 8 pages; the index's own <lastmod> doesn't count as a page.
+    expect(result.status).toBe('pass');
+    expect(result.message).toBe('7/8 URLs carry lastmod (87%) across 2 sitemap(s) from the index');
+  });
+
+  it('warns when an index lists no readable sitemaps', async () => {
+    const index = '<?xml version="1.0"?><sitemapindex><sitemap><loc>https://example.com/missing.xml</loc></sitemap></sitemapindex>';
+    const result = await sitemapLastmod.run(target, site({ '/sitemap.xml': response(200, index, 'application/xml') }));
+    expect(result.status).toBe('warn');
+    expect(result.message).toContain('Sitemap index lists no readable same-origin sitemaps');
   });
 });
 

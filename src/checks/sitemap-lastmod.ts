@@ -1,5 +1,6 @@
-import type { Check, CheckResult, Evidence } from '../types';
-import { decodeBody, makeResult } from './_shared';
+import type { Check, CheckResult } from '../types';
+import { makeResult } from './_shared';
+import { loadSitemap } from './_sitemap';
 
 const META = {
   id: 'sitemap-lastmod',
@@ -14,34 +15,20 @@ const sitemapLastmod: Check = {
   scored: false,
 
   async run(target, http): Promise<CheckResult> {
-    let url = new URL('/sitemap.xml', target.origin).toString();
-    let res = await http.fetch(url);
-    if (res.status !== 200) {
-      try {
-        const robotsRes = await http.fetch(new URL('/robots.txt', target.origin).toString());
-        if (robotsRes.status === 200) {
-          const match = decodeBody(robotsRes.body).match(/^\s*sitemap\s*:\s*(\S+)/im);
-          if (match) {
-            url = match[1];
-            res = await http.fetch(url);
-          }
-        }
-      } catch { /* best-effort */ }
+    const sitemap = await loadSitemap(target, http);
+    const { evidence, entries } = sitemap;
+    if (sitemap.status !== 200) return makeResult(META, 'warn', 'No sitemap to inspect for lastmod coverage', evidence);
+    if (entries.length === 0) {
+      const why = sitemap.isIndex ? 'Sitemap index lists no readable same-origin sitemaps with <url> entries' : 'Sitemap has no <url> entries';
+      return makeResult(META, 'warn', why, evidence);
     }
-
-    const evidence: Evidence = {
-      request: { method: 'GET', url },
-      response: { status: res.status, contentType: res.contentType, bytes: res.body.length },
-    };
-    if (res.status !== 200) return makeResult(META, 'warn', 'No sitemap to inspect for lastmod coverage', evidence);
-    const body = decodeBody(res.body);
-    const urls = body.match(/<url[\s>]/g)?.length ?? 0;
-    if (urls === 0) return makeResult(META, 'warn', 'Sitemap is an index or has no <url> entries', evidence);
-    const lastmods = body.match(/<lastmod[\s>]/g)?.length ?? 0;
+    const urls = entries.length;
+    const lastmods = entries.filter((e) => e.hasLastmod).length;
+    const from = sitemap.isIndex ? ` across ${sitemap.children.length} sitemap(s) from the index` : '';
     // Round down for display, so a near miss (e.g. 79.5%) never reads as the 80% threshold.
     const pct = Math.floor((lastmods * 100) / urls);
-    if (lastmods / urls >= 0.8) return makeResult(META, 'pass', `${lastmods}/${urls} URLs carry lastmod (${pct}%)`, evidence);
-    return makeResult(META, 'warn', `Only ${lastmods}/${urls} URLs carry lastmod (${pct}%) — agents lose the freshness signal`, evidence);
+    if (lastmods / urls >= 0.8) return makeResult(META, 'pass', `${lastmods}/${urls} URLs carry lastmod (${pct}%)${from}`, evidence);
+    return makeResult(META, 'warn', `Only ${lastmods}/${urls} URLs carry lastmod (${pct}%)${from} — agents lose the freshness signal`, evidence);
   },
 };
 
