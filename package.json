@@ -1,6 +1,6 @@
 {
   "name": "agent-readiness-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI that checks whether a website is ready for AI agents — locally, in CI, or in production.",
   "license": "MIT",
   "type": "module",
