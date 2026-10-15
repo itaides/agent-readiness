@@ -28,6 +28,10 @@ Updated 2026-08-04. A feature moves into scored defaults only when its public de
 - Expand deterministic fixtures for browser and DNS paths in CI environments that provide Chrome and a controllable DNS server.
 - Revisit the Cloudflare bot taxonomy and maintained user-agent mappings at least every six months.
 
+## Next: hosted scanner
+
+- A free web scanner on the project site: public reports at `/score/<domain>`, unlisted links at `/r/<token>`, 30 scans a day, a 6-hour cache, public addresses only. Design and backend rules: [`hosted-scanner-design.md`](hosted-scanner-design.md).
+
 ## Watchlist
 
 - **ACP**: the API specification exists, but a stable site-level discovery signal is not yet clear enough for an external scanner.
