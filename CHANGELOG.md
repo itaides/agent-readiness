@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-15
+
+### Added
+
+- **Library entry point (experimental):** `import { scan, checks, createTarget, createHttpClient, formatHtml } from 'agent-readiness-cli/library'` runs scans and renders reports from Node 20+ or Bun, with TypeScript declarations. It also exports the check list's site-type rules, `formatJson`, `formatMarkdown`, `resolveScore`, `addRemediation`, the report's minified CSS and JS, `VERSION` and the report types. Any 0.x minor release may change it; see the README.
+
+### Fixed
+
+- **HTML report colours:** status tints are mixed in sRGB, so PASS badges no longer drift pink, and the dark theme's primary button label is dark so it clears 4.5:1 contrast.
+
 ## [0.2.0] - 2026-10-15
 
 ### Added

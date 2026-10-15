@@ -1,6 +1,6 @@
 {
   "name": "agent-readiness-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI that checks whether a website is ready for AI agents — locally, in CI, or in production.",
   "license": "MIT",
   "type": "module",
@@ -26,6 +26,13 @@
     "agent-readiness": "dist/cli.js",
     "agent-readiness-cli": "dist/cli.js"
   },
+  "exports": {
+    "./library": {
+      "types": "./dist/types/library.d.ts",
+      "import": "./dist/library.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "prompts",
@@ -40,7 +47,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bun build src/cli.ts --target=node --minify --splitting --outdir=dist",
+    "build": "rm -rf dist && bun build src/cli.ts src/library.ts --target=node --minify --splitting --outdir=dist && bun run scripts/build-types.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "audit:specs": "bun run scripts/audit-spec-staleness.ts",
