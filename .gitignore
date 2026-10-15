@@ -10,3 +10,4 @@ coverage/
 # Local launch / marketing artifacts (not part of the published CLI)
 launch-animation/
 assets/linkedin-*
+.wrangler/
