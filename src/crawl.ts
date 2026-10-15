@@ -1,22 +1,13 @@
 import type { Check, CrawlSummary, HttpClient, CheckRunOptions, Target } from './types';
-import { decodeBody } from './checks/_shared';
+import { loadSitemap } from './checks/_sitemap';
 
 async function sitemapUrls(target: Target, http: HttpClient, limit: number): Promise<string[]> {
-  let res = await http.fetch(new URL('/sitemap.xml', target.origin).toString());
-  if (res.status !== 200) {
-    try {
-      const robotsRes = await http.fetch(new URL('/robots.txt', target.origin).toString());
-      if (robotsRes.status === 200) {
-        const match = decodeBody(robotsRes.body).match(/^\s*sitemap\s*:\s*(\S+)/im);
-        if (match) res = await http.fetch(match[1]);
-      }
-    } catch { /* best-effort */ }
-  }
-  if (res.status !== 200) return [];
+  // Follows a sitemap index to its sitemaps, so the sample is pages, not sitemap files.
+  const { entries } = await loadSitemap(target, http);
   // Only sample pages on the target's origin: a sitemap can list any host, and crawling it would
   // send scan traffic to sites the user never named.
-  const locs = [...decodeBody(res.body).matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/g)]
-    .map((m) => m[1])
+  const locs = entries
+    .map((e) => e.loc)
     .filter((loc) => {
       try { return new URL(loc).origin === target.origin.origin; } catch { return false; }
     });

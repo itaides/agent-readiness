@@ -111,7 +111,7 @@ Reports any TDM policy signal: `TDM-Reservation` response header, `<meta tdm-res
 
 ### `bot-ua-differential` — scored, default
 
-Fetches the content URL with a browser UA, then `GPTBot` and `ClaudeBot` UAs. Fails when a bot UA gets 401/403/429 while the browser gets 200; warns on other status or large body-size differentials; passes on identical treatment. Source: [Cloudflare verified bots](https://developers.cloudflare.com/bots/concepts/bot/verified-bots/).
+Fetches the content URL with a browser UA, then `GPTBot` and `ClaudeBot` UAs. Fails when a bot UA gets 401/403/429 while the browser gets 200; warns on other status or large body-size differentials; passes on identical treatment. A bot that gets a 200 Markdown version (`text/markdown` or `text/plain`, at least 200 characters, not HTML) of an HTML page passes: it's an alternate format that is smaller by nature, not a degraded response. Source: [Cloudflare verified bots](https://developers.cloudflare.com/bots/concepts/bot/verified-bots/).
 
 ### `web-bot-auth` — scored, default
 
