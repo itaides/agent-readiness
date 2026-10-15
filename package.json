@@ -7,7 +7,7 @@
   "homepage": "https://github.com/itaides/agent-readiness",
   "repository": {
     "type": "git",
-    "url": "https://github.com/itaides/agent-readiness.git"
+    "url": "git+https://github.com/itaides/agent-readiness.git"
   },
   "bugs": "https://github.com/itaides/agent-readiness/issues",
   "keywords": [
@@ -23,7 +23,7 @@
     "cloudflare"
   ],
   "bin": {
-    "agent-readiness": "./dist/cli.js"
+    "agent-readiness": "dist/cli.js"
   },
   "files": [
     "dist",
