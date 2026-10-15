@@ -19,6 +19,7 @@ import {
   skillsIndex,
   tdmrepJson,
 } from './agent-files';
+import { SITE_URL } from './config';
 import { renderLanding, renderNotFound, renderScanPage } from './pages';
 import { SITE_JS } from './script';
 import { sampleReport } from './sample-report';
@@ -38,7 +39,7 @@ export async function buildSite(outDir: string, now = new Date()): Promise<strin
     'index.html': renderLanding(report, updated),
     'index.md': landingMarkdown(),
     'scan/index.html': renderScanPage(),
-    'example/index.html': formatHtml(report),
+    'example/index.html': formatHtml(report, { canonicalUrl: `${SITE_URL}/example/` }),
     'example/index.md': formatMarkdown(report),
     'example/report.json': formatJson(report),
     '404.html': renderNotFound(),
