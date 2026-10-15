@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 
 import { addRemediation } from '../src/remediation';
-import { formatHtml, formatHuman, formatJson, formatMarkdown } from '../src/report';
+import { formatHuman, formatJson, formatMarkdown } from '../src/report';
+import { formatHtml } from '../src/report-html';
 import type { CheckResult, Report } from '../src/types';
 
 const target = 'https://example.com/';
@@ -56,7 +57,8 @@ describe('actionable remediation', () => {
     expect(formatHuman(scanReport)).toContain('FIX     Return Markdown');
     expect(formatHuman(scanReport)).toContain('VERIFY  agent-readiness https://example.com/ --only markdown-negotiation');
     expect(formatMarkdown(scanReport)).toContain('**How to fix:** Return Markdown');
-    expect(formatHtml(scanReport)).toContain('<strong>How to fix</strong>Return Markdown');
+    expect(formatHtml(scanReport)).toContain('How to fix</div><p>Return Markdown');
+    expect(formatHtml(scanReport)).toContain('agent-readiness https://example.com/ --only markdown-negotiation');
     expect(JSON.parse(formatJson(scanReport)).checks[0].remediation.verifyCommand).toContain('--only markdown-negotiation');
   });
 });
