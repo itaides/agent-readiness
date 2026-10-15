@@ -259,7 +259,7 @@ function spaFallthroughHandler(req: IncomingMessage, res: ServerResponse): void 
   res.end('<!doctype html><html><body><div id="root"></div></body></html>');
 }
 
-export function startFixtureServer(mode: FixtureMode): Promise<Fixture> {
+export function startFixtureServer(mode: FixtureMode, port = 0): Promise<Fixture> {
   return new Promise((resolveP) => {
     const server: Server = createServer((req, res) => {
       if (mode === 'all-pass') {
@@ -269,7 +269,7 @@ export function startFixtureServer(mode: FixtureMode): Promise<Fixture> {
         spaFallthroughHandler(req, res);
       }
     });
-    server.listen(0, '127.0.0.1', () => {
+    server.listen(port, '127.0.0.1', () => {
       const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://127.0.0.1:${port}`;
       resolveP({

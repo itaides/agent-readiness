@@ -72,7 +72,7 @@ The workflow has two jobs:
 - **`build`** runs on pull requests and pushes to `main`. It builds and starts the app on the runner and scans `APP_URL`. On `main` it saves the scan to the Actions cache as the baseline. On a pull request it restores the newest baseline from `main`, so anything the PR newly breaks fails the build, and the score must stay at `MIN_SCORE` or above. Reports are uploaded as an artifact and the Markdown report goes to the job summary.
 - **`production`** runs daily and on demand when `AGENT_READINESS_URL` is set. It compares the deployed site with its last passing scan and only saves a new baseline when it passes.
 
-This repository runs the same setup on its own site in [`.github/workflows/agent-readiness.yml`](../.github/workflows/agent-readiness.yml): it builds `site/`, serves it with `wrangler dev`, and calls the example gate script unchanged.
+This repository runs the `build` job for real in [`.github/workflows/agent-readiness.yml`](../.github/workflows/agent-readiness.yml): it serves the all-pass fixture app from `testdata/` and calls the example gate script unchanged.
 
 ### Preview deployments
 
@@ -146,4 +146,4 @@ npx --yes agent-readiness-cli@0.3.0 "$URL" --baseline baseline.json --format jso
 
 It also checks that both workflow files are valid YAML and have the `build` and `production` jobs, that the `build` job scans the app it started rather than `AGENT_READINESS_URL`, and that the script's pinned version matches `package.json`.
 
-This repository's own [`.github/workflows/agent-readiness.yml`](../.github/workflows/agent-readiness.yml) runs the gate script for real on every pull request and push to `main`, against the site in `site/`.
+This repository's own [`.github/workflows/agent-readiness.yml`](../.github/workflows/agent-readiness.yml) runs the gate script for real on every pull request and push to `main`, against the fixture app in `testdata/`.
