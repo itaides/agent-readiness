@@ -14,6 +14,7 @@ First public release, published to npm as [`agent-readiness-cli`](https://www.np
 
 ### Added
 
+- **CI/CD examples** ([`docs/ci.md`](docs/ci.md)): a portable gate script (`MIN_SCORE`, `BASELINE`, JSON/HTML/Markdown reports) plus GitHub Actions and GitLab CI workflows. Pull requests are gated on their own build (started in the job, compared with the default branch's scan); a scheduled job watches production. Tested against the fixture servers in `test/ci-examples.test.ts`, and this repo runs the gate on its own site in `.github/workflows/agent-readiness.yml`.
 - CLI scanning any URL (public or local) for **39 agent-readiness checks** across 5 categories. See [`docs/checks.md`](docs/checks.md) for endpoints, pass criteria, scoring, and spec links.
   - Discoverability (6): `robots-txt`, `sitemap`, `sitemap-lastmod` (informational), `link-header-api-catalog`, `dns-aid` (informational), `rss-atom` (informational)
   - Content (11): `markdown-negotiation`, `markdown-mirror`, `markdown-link-rel` (informational), `llms-txt` (opt-in), `llms-full-txt` (opt-in), `sitemap-md` (informational), `agents-md` (opt-in), `page-html-quality`, `json-ld`, `freshness-signals` (informational), `semantic-controls` (informational)
