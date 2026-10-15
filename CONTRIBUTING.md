@@ -120,7 +120,7 @@ Tests should use local deterministic fixtures rather than depending on public we
 
 ## Releasing
 
-Maintainers publish to npm as `@itaides/agent-readiness`:
+Maintainers publish to npm as `agent-readiness-cli`:
 
 1. Set `version` in `package.json` and move the `[Unreleased]` CHANGELOG entries under a dated heading for it. `--version`, the User-Agent and report metadata read the version from `package.json`.
 2. Run the validation suite above, then `npm pack --dry-run` to check the published files.
