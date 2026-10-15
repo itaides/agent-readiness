@@ -118,6 +118,15 @@ The bundled `dist/cli.js` must remain below the CI limit of 100 KB, and all of `
 
 Tests should use local deterministic fixtures rather than depending on public websites. A live read-only scan may supplement fixture coverage, but it should not be the only verification.
 
+## Releasing
+
+Maintainers publish to npm as `@itaides/agent-readiness`:
+
+1. Set `version` in `package.json` and move the `[Unreleased]` CHANGELOG entries under a dated heading for it. `--version`, the User-Agent and report metadata read the version from `package.json`.
+2. Run the validation suite above, then `npm pack --dry-run` to check the published files.
+3. `npm publish` (`prepublishOnly` builds `dist/`; `publishConfig.access` is `public`).
+4. Tag and release: `git tag v<version> && git push origin v<version>`, then `gh release create v<version> --notes-from-tag` or paste the CHANGELOG section.
+
 ## Pull request checklist
 
 - [ ] The change is focused and documented.

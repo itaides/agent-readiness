@@ -10,6 +10,7 @@ import type {
   CheckRunOptions,
 } from './types';
 import { addRemediation } from './remediation';
+import { VERSION } from './version';
 
 export interface ScanOptions {
   concurrency: number;
@@ -57,7 +58,7 @@ export async function scan(
     version: 1,
     target: target.origin.toString(),
     scannedAt: new Date().toISOString(),
-    tool: { name: 'agent-readiness', version: '0.0.1' },
+    tool: { name: 'agent-readiness', version: VERSION },
     summary: buildSummary(results, checks),
     checks: results,
     score: buildScore(results, checks),

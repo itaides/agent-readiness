@@ -1,6 +1,6 @@
 {
-  "name": "agent-readiness",
-  "version": "0.0.1",
+  "name": "@itaides/agent-readiness",
+  "version": "0.1.0",
   "description": "CLI that checks whether a website is ready for AI agents — locally, in CI, or in production.",
   "license": "MIT",
   "type": "module",
@@ -28,12 +28,16 @@
   "files": [
     "dist",
     "prompts",
-    "docs",
+    "docs/checks.md",
+    "docs/roadmap.md",
     "README.md",
     "LICENSE",
     "PRIVACY.md",
     "SECURITY.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bun build src/cli.ts --target=node --minify --splitting --outdir=dist",
     "typecheck": "tsc --noEmit",
@@ -51,6 +55,7 @@
     "typescript": "^6.0.3"
   },
   "engines": {
+    "node": ">=20",
     "bun": ">=1.1"
   }
 }

@@ -1,4 +1,5 @@
 import type { Check, CheckResult, Evidence } from '../types';
+import { VERSION } from '../version';
 import { decodeBody, makeResult } from './_shared';
 
 const META = {
@@ -31,7 +32,7 @@ const mcpServerDiscover: Check = {
       params: {
         _meta: {
           'io.modelcontextprotocol/protocolVersion': '2026-07-28',
-          'io.modelcontextprotocol/clientInfo': { name: 'agent-readiness', version: '0.0.1' },
+          'io.modelcontextprotocol/clientInfo': { name: 'agent-readiness', version: VERSION },
           'io.modelcontextprotocol/clientCapabilities': {},
         },
       },
