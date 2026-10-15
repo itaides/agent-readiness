@@ -12,6 +12,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - **Website** passes its own content checks (13/14 under `--preset content`): crawler policy in `robots.txt` (Content-Signal plus explicit AI-bot groups), `sitemap.xml`, `sitemap.md`, `llms-full.txt`, `AGENTS.md`, an Agent Skill, TDMRep, JSON-LD, canonical links, a Markdown version of each page, and a Worker that serves them for `Accept: text/markdown`. Styles and scripts moved to same-origin files. The install command is now `npm install -g agent-readiness-cli`.
 
+### Fixed
+
+- **`sitemap-lastmod`** passed at 79.5% coverage because it rounded the percentage before comparing; it now passes only at 80% or more, as documented.
+
 ## [0.1.0] - 2026-10-15
 
 First public release, published to npm as [`agent-readiness-cli`](https://www.npmjs.com/package/agent-readiness-cli). The command is `agent-readiness` (`agent-readiness-cli` also works, so `npx agent-readiness-cli` and `bunx agent-readiness-cli` run it).
