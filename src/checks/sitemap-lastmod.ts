@@ -39,7 +39,7 @@ const sitemapLastmod: Check = {
     if (urls === 0) return makeResult(META, 'warn', 'Sitemap is an index or has no <url> entries', evidence);
     const lastmods = body.match(/<lastmod[\s>]/g)?.length ?? 0;
     const pct = Math.round((lastmods / urls) * 100);
-    if (pct >= 80) return makeResult(META, 'pass', `${lastmods}/${urls} URLs carry lastmod (${pct}%)`, evidence);
+    if (lastmods / urls >= 0.8) return makeResult(META, 'pass', `${lastmods}/${urls} URLs carry lastmod (${pct}%)`, evidence);
     return makeResult(META, 'warn', `Only ${lastmods}/${urls} URLs carry lastmod (${pct}%) — agents lose the freshness signal`, evidence);
   },
 };
