@@ -30,6 +30,10 @@ const markdownNegotiation: Check = {
     if (/^\s*<!doctype|^\s*<html/i.test(head)) {
       return makeResult(META, 'fail', 'Body looks like HTML — server ignored Accept and mislabeled content-type', evidence);
     }
+    const vary = res.headers.get('vary') ?? '';
+    if (!/\baccept\b/i.test(vary)) {
+      return makeResult(META, 'warn', 'Returns text/markdown but no Vary: Accept — shared caches may serve the wrong representation', evidence);
+    }
     return makeResult(META, 'pass', 'Server returns text/markdown for Accept: text/markdown', evidence);
   },
 };

@@ -40,6 +40,20 @@ const GUIDANCE: Record<string, Guidance> = {
   'semantic-controls': {
     suggestion: 'Use real <a> and <button> elements with descriptive labels instead of click-handler divs; label every form input so browser-driving agents can act.',
   },
+  'markdown-mirror': {
+    suggestion: 'Serve a markdown mirror of key pages at <path>.md (or via Link: rel="alternate" type="text/markdown"), generated from the same source as the HTML page.',
+    prompt: true,
+  },
+  'markdown-link-rel': {
+    suggestion: 'Advertise agent formats with Link: rel="alternate" type="text/markdown" and rel="describedby" pointing at the covering llms.txt.',
+  },
+  'llms-full-txt': {
+    suggestion: 'Publish /llms-full.txt as text/plain or text/markdown with the full text of the pages llms.txt indexes.',
+    prompt: true,
+  },
+  'sitemap-md': {
+    suggestion: 'Optionally publish /sitemap.md — a markdown index of documentation pages agents can keep reading from.',
+  },
   'llms-txt': {
     suggestion: 'Publish /llms.txt as text/plain or text/markdown with an H1 and curated links to the most useful agent-facing content.',
     prompt: true,

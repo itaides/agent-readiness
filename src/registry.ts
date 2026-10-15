@@ -27,6 +27,10 @@ import pageHtmlQuality from './checks/page-html-quality';
 import jsonLd from './checks/json-ld';
 import freshnessSignals from './checks/freshness-signals';
 import semanticControls from './checks/semantic-controls';
+import markdownMirror from './checks/markdown-mirror';
+import markdownLinkRel from './checks/markdown-link-rel';
+import llmsFullTxt from './checks/llms-full-txt';
+import sitemapMd from './checks/sitemap-md';
 
 export const checks: Check[] = [
   robotsTxt,
@@ -34,7 +38,11 @@ export const checks: Check[] = [
   linkHeaderApiCatalog,
   dnsAid,
   markdownNegotiation,
+  markdownMirror,
+  markdownLinkRel,
   llmsTxt,
+  llmsFullTxt,
+  sitemapMd,
   pageHtmlQuality,
   jsonLd,
   freshnessSignals,
@@ -66,7 +74,11 @@ export const PRESETS: Record<'all' | 'content' | 'api' | 'commerce', string[] | 
     'link-header-api-catalog',
     'dns-aid',
     'markdown-negotiation',
+    'markdown-mirror',
+    'markdown-link-rel',
     'llms-txt',
+    'llms-full-txt',
+    'sitemap-md',
     'page-html-quality',
     'json-ld',
     'freshness-signals',

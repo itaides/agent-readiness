@@ -42,7 +42,7 @@ Options:
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List all available checks and exit
-  --include-llms-txt            Include the opt-in llms.txt check
+  --include-llms-txt            Include the opt-in llms.txt and llms-full.txt checks
   --include-auth-md             Include the API-focused auth.md check
   --content-url <url>           Page used for content and browser checks
   --commerce-url <url>          Paid resource used for UCP/x402/MPP checks
@@ -126,7 +126,7 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
     set = all.filter((c) => onlySet.has(c.id));
   } else {
     const explicitlyActivated = new Set<string>();
-    if (args.includeLlmsTxt) explicitlyActivated.add('llms-txt');
+    if (args.includeLlmsTxt) { explicitlyActivated.add('llms-txt'); explicitlyActivated.add('llms-full-txt'); }
     if (args.includeAuthMd) explicitlyActivated.add('auth-md');
     if (args.browser) explicitlyActivated.add('browser-agentic');
     if (args.commerceUrl) {

@@ -37,11 +37,27 @@ Queries SVCB/HTTPS at `_index._agents.<hostname>`. Passes when at least one serv
 
 ### `markdown-negotiation` — scored, default
 
-Requests the content URL with `Accept: text/markdown`. Passes on HTTP 200, `text/markdown`, a non-empty body, and content that does not look like HTML. Source: [Cloudflare Markdown for Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/).
+Requests the content URL with `Accept: text/markdown`. Passes on HTTP 200, `text/markdown`, a non-empty body, and content that does not look like HTML. A markdown response without `Vary: Accept` warns — shared caches can otherwise serve the wrong representation. Source: [Cloudflare Markdown for Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/).
 
 ### `llms-txt` — scored, opt-in
 
 Enabled with `--include-llms-txt` or `--only llms-txt`. `GET /llms.txt` must return HTTP 200 as `text/plain` or `text/markdown`, be non-empty, and contain an H1. Source: [llms.txt proposal](https://llmstxt.org/).
+
+### `llms-full-txt` — scored, opt-in
+
+Enabled with `--include-llms-txt` or `--only llms-full-txt`. `GET /llms-full.txt` must return HTTP 200 as `text/plain` or `text/markdown` and be non-empty. Source: [llms.txt proposal](https://llmstxt.org/).
+
+### `markdown-mirror` — scored, default
+
+Probes the content URL's `.md` mirror (`<path>.md`, `<path>/index.md`, or `<page>.html.md`), preferring a `Link` header or `<link rel="alternate" type="text/markdown">` advertisement when present. Passes on HTTP 200 markdown/plain content that is not HTML. Source: [llms.txt proposal](https://llmstxt.org/) and [Vercel `.md` endpoints](https://vercel.com/docs/agent-resources/markdown-access).
+
+### `markdown-link-rel` — informational, default
+
+Passes when the content page advertises `rel="alternate" type="text/markdown"` or `rel="describedby"` via `Link` header or `<link>` tag. Warns when absent. Source: [llms.txt link relations](https://llmstxt.org/).
+
+### `sitemap-md` — informational, default
+
+`GET /sitemap.md`. Passes on markdown content containing at least one markdown link; warns otherwise. Source: [Vercel agent-readability spec](https://vercel.com/kb/guide/agent-readability-spec).
 
 ### `page-html-quality` — scored, default
 
@@ -160,10 +176,10 @@ Guidance is capability-aware: optional protocols are phrased as conditional reco
 | Category | Available | Default | Scored by default |
 |---|---:|---:|---:|
 | Discoverability | 4 | 4 | 3 |
-| Content | 6 | 5 | 3 |
+| Content | 10 | 8 | 4 |
 | Bot access | 4 | 4 | 3 |
 | Capabilities | 10 | 7 | 6 |
 | Commerce | 3 | 0 | 0 |
-| **Total** | **27** | **20** | **15** |
+| **Total** | **31** | **23** | **16** |
 
-`llms-txt` raises the scored total to 16. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
+`llms-txt` and `llms-full-txt` raise the scored total to 18. Supplying `--commerce-url` adds three commerce checks. Informational checks never change totals.
