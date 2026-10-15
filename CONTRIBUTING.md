@@ -114,7 +114,7 @@ node dist/cli.js --list-checks
 git diff --check
 ```
 
-The bundled `dist/cli.js` must remain below the CI limit of 100 KB. If your work needs a large or platform-specific dependency, prefer explicit runtime discovery like the Lighthouse integration.
+The bundled `dist/cli.js` must remain below the CI limit of 100 KB, and all of `dist/`'s JavaScript below 150 KB. Code that only one output format needs, like the HTML report, should load with a dynamic `import()` so it stays out of `cli.js`. If your work needs a large or platform-specific dependency, prefer explicit runtime discovery like the Lighthouse integration.
 
 Tests should use local deterministic fixtures rather than depending on public websites. A live read-only scan may supplement fixture coverage, but it should not be the only verification.
 
