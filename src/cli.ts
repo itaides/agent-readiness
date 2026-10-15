@@ -3,9 +3,9 @@ import { createHttpClient } from './http';
 import { createTarget } from './target';
 import { scan } from './scanner';
 import { formatHuman, formatJson, formatMarkdown } from './report';
-import { checks, PRESETS } from './registry';
+import { checks, PRESETS, SITE_TYPES } from './registry';
 import { crawlPages } from './crawl';
-import type { Check } from './types';
+import type { Check, SiteType } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
 import { VERSION } from './version';
 
@@ -32,6 +32,7 @@ interface Args {
   verifySkillDigests: boolean;
   baseline?: string;
   preset: PresetName;
+  siteType: string;
   only?: string[];
   skip?: string[];
   listChecks: boolean;
@@ -44,6 +45,8 @@ const HELP = `Usage: agent-readiness <url> [options]
 Options:
   --preset all|content|api|commerce
                                 Check group preset (default: all)
+  --site-type full|content      content: skip API/auth checks a content site can't have,
+                                and leave them out of the score (default: full)
   --only id1,id2,...            Run only these check IDs (overrides --preset)
   --skip id1,id2,...            Skip these check IDs (applied after preset)
   --list-checks                 List all available checks and exit
@@ -87,6 +90,7 @@ function parseArgs(argv: string[]): Args {
     browser: false,
     verifySkillDigests: false,
     preset: 'all',
+    siteType: 'full',
     listChecks: false,
     help: false,
     version: false,
@@ -114,6 +118,7 @@ function parseArgs(argv: string[]): Args {
       case '--cookie': args.headers.Cookie = argv[++i] ?? ''; break;
       case '--user-agent': args.userAgent = argv[++i]; break;
       case '--preset': args.preset = (argv[++i] ?? 'all') as PresetName; break;
+      case '--site-type': args.siteType = argv[++i] ?? ''; break;
       case '--only': args.only = parseList(argv[++i]); break;
       case '--skip': args.skip = parseList(argv[++i]); break;
       case '--header': {
@@ -221,6 +226,10 @@ async function main(): Promise<number> {
     console.error(HELP);
     return 2;
   }
+  if (!SITE_TYPES.includes(args.siteType as SiteType)) {
+    console.error(`Unknown --site-type "${args.siteType}". Use one of: ${SITE_TYPES.join(', ')}`);
+    return 2;
+  }
 
   let baselineReport;
   if (args.baseline) {
@@ -257,6 +266,7 @@ async function main(): Promise<number> {
   try {
     const report = await scan(target, selected, http, {
       concurrency: args.concurrency,
+      siteType: args.siteType as SiteType,
       checkOptions: {
         commerceUrl: args.commerceUrl ? new URL(args.commerceUrl, target.origin) : undefined,
         mcpUrl: args.mcpUrl ? new URL(args.mcpUrl, target.origin) : undefined,

@@ -11,6 +11,7 @@ export function formatHuman(report: Report): string {
   const lines: string[] = [];
   lines.push(`agent-readiness  ${report.target}`);
   lines.push(`scanned          ${report.scannedAt}`);
+  if (report.siteType) lines.push(`site type        ${report.siteType} (${notApplicableCount(report)} checks not applicable)`);
   if (report.score) {
     lines.push(`score            ${report.score.value}/100 (${report.score.grade}) — ${report.score.passed}/${report.score.total} scored checks passing`);
   }
@@ -51,7 +52,7 @@ export function formatMarkdown(report: Report): string {
   const lines: string[] = [];
   lines.push(`# agent-readiness — ${report.target}`);
   lines.push('');
-  lines.push(`Scanned ${report.scannedAt} · ${report.tool.name} ${report.tool.version}`);
+  lines.push(`Scanned ${report.scannedAt} · ${report.tool.name} ${report.tool.version}${report.siteType ? ` · site type \`${report.siteType}\` (${notApplicableCount(report)} checks not applicable)` : ''}`);
   if (report.score) {
     lines.push('');
     lines.push(`**Score: ${report.score.value}/100 (${report.score.grade})** — ${report.score.passed}/${report.score.total} scored checks passing`);
@@ -93,4 +94,8 @@ export function formatMarkdown(report: Report): string {
     lines.push('');
   }
   return lines.join('\n');
+}
+
+function notApplicableCount(report: Report): number {
+  return report.notApplicable?.length ?? 0;
 }

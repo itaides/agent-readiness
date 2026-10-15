@@ -127,6 +127,7 @@ npx --yes agent-readiness-cli@0.1.0 "$URL" --baseline baseline.json --format jso
 ## Tips
 
 - **Scan more than the homepage:** `SCAN_ARGS="--crawl 10"` samples 10 sitemap pages and adds the crawl table to the report.
+- **Content sites:** `SCAN_ARGS="--site-type content"` (from 0.2.0) skips the API and auth checks a docs or marketing site can't have and leaves them out of the score, so `MIN_SCORE` measures what applies.
 - **Gate on part of the suite:** `SCAN_ARGS="--preset content"` or `--only robots-txt,sitemap,llms-txt`. Keep the same selection for the baseline run.
 - **Staging behind auth:** set `SCAN_HEADER` (e.g. `Authorization: Bearer <token>`) or `SCAN_COOKIE` from a CI secret. They're separate from `SCAN_ARGS` because header values contain spaces, and the CLI only sends them to the target's origin.
 - **Slow targets:** add `--timeout 15000` (milliseconds per request) to `SCAN_ARGS`.
