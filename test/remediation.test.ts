@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 
 import { addRemediation } from '../src/remediation';
-import { formatHtml, formatHuman, formatJson, formatMarkdown } from '../src/report';
+import { formatHuman, formatJson, formatMarkdown } from '../src/report';
+import { formatHtml } from '../src/report-html';
 import type { CheckResult, Report } from '../src/types';
 
 const target = 'https://example.com/';

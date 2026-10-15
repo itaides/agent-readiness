@@ -2,7 +2,8 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { checks } from '../../src/registry';
-import { formatHtml, formatJson } from '../../src/report';
+import { formatJson } from '../../src/report';
+import { formatHtml } from '../../src/report-html';
 import { REPO_URL, renderLanding, renderNotFound, renderScanPage } from './pages';
 import { sampleReport } from './sample-report';
 

@@ -1,6 +1,9 @@
+import { formatMarkdown } from '../report';
 import type { Category, CheckResult, Evidence, Report, Status } from '../types';
-import { REPORT_JS } from './script';
-import { REPORT_CSS } from './styles';
+import { reportCss, reportJs } from './minify' with { type: 'macro' };
+
+const REPORT_CSS = reportCss();
+const REPORT_JS = reportJs();
 
 const REPO_URL = 'https://github.com/itaides/agent-readiness';
 const CHECKS_DOC_URL = `${REPO_URL}/blob/main/docs/checks.md`;
@@ -540,4 +543,8 @@ ${fixDialog(report, views, gains, score)}
 <script>${REPORT_JS}</script>
 </body>
 </html>`;
+}
+
+export function formatHtml(report: Report): string {
+  return renderHtml(report, formatMarkdown(report));
 }
