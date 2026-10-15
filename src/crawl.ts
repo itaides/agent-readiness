@@ -13,7 +13,13 @@ async function sitemapUrls(target: Target, http: HttpClient, limit: number): Pro
     } catch { /* best-effort */ }
   }
   if (res.status !== 200) return [];
-  const locs = [...decodeBody(res.body).matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/g)].map((m) => m[1]);
+  // Only sample pages on the target's origin: a sitemap can list any host, and crawling it would
+  // send scan traffic to sites the user never named.
+  const locs = [...decodeBody(res.body).matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/g)]
+    .map((m) => m[1])
+    .filter((loc) => {
+      try { return new URL(loc).origin === target.origin.origin; } catch { return false; }
+    });
   // Evenly sample across the sitemap rather than always taking the first N.
   if (locs.length <= limit) return locs;
   const step = locs.length / limit;

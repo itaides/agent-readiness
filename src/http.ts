@@ -7,6 +7,11 @@ export interface HttpClientOptions {
   timeoutMs: number;
   userAgent: string;
   defaultHeaders: Record<string, string>;
+  /**
+   * When set, defaultHeaders (--header, --cookie) are only sent to this origin, including after
+   * redirects, so credentials meant for the target never reach hosts it links or redirects to.
+   */
+  credentialOrigin?: string;
   insecure: boolean;
   maxBodyBytes?: number;
   maxRedirects?: number;
@@ -39,18 +44,18 @@ export function createHttpClient(opts: HttpClientOptions): HttpClient {
   return {
     async fetch(url, init = {}): Promise<HttpResponse> {
       const method = init.method ?? 'GET';
-      const headers: Record<string, string> = {
+      const headersFor = (target: string): Record<string, string> => ({
         'User-Agent': opts.userAgent,
-        ...opts.defaultHeaders,
+        ...(opts.credentialOrigin === undefined || new URL(target).origin === opts.credentialOrigin ? opts.defaultHeaders : {}),
         ...(init.headers ?? {}),
-      };
+      });
 
       const redirectChain: string[] = [];
       let currentUrl = url;
       let res: Response | null = null;
 
       for (let i = 0; i <= maxRedirects; i++) {
-        res = await singleFetch(currentUrl, { method, headers, body: init.body });
+        res = await singleFetch(currentUrl, { method, headers: headersFor(currentUrl), body: init.body });
         const loc = res.headers.get('location');
         if (res.status >= 300 && res.status < 400 && loc) {
           if (i === maxRedirects) break;
