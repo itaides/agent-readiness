@@ -45,6 +45,7 @@ First public release, published to npm as [`@itaides/agent-readiness`](https://w
 
 ### Fixed
 
+- **Credentials stay on the target origin.** `--cookie` and `--header` values were sent on every request, including redirects off the target and sitemap pages on other hosts. They now go only to the target's origin. `--crawl` also samples only same-origin sitemap pages; before, a sitemap could point the crawl at any host.
 - **`mcp-server-card`** check now accepts both MCP card flavors in the wild: the older **v1.json** schema (with top-level `protocolVersion`) and the newer **SEP-1649 / server-card-v1** schema (no `protocolVersion`, richer `auth` + `capabilities` blocks). Previously rejected real working cards on sites using the newer shape (e.g. `matzarich.app`), producing false negatives. ([#3](https://github.com/itaides/agent-readiness/pull/3))
 
 ### Known limitations

@@ -250,6 +250,7 @@ async function main(): Promise<number> {
     timeoutMs: args.timeoutMs,
     userAgent: args.userAgent ?? `agent-readiness/${VERSION} (+https://github.com/itaides/agent-readiness)`,
     defaultHeaders: args.headers,
+    credentialOrigin: target.origin.origin,
     insecure: args.insecure || target.isLocal,
   });
 
@@ -267,7 +268,7 @@ async function main(): Promise<number> {
       report.crawl = await crawlPages(target, pageChecks, http, args.crawl, {
         verifySkillDigests: args.verifySkillDigests,
       });
-      if (!report.crawl) console.error('warning: --crawl found no sitemap URLs to sample');
+      if (!report.crawl) console.error('warning: --crawl found no same-origin sitemap URLs to sample');
     }
     const out = await render(report, args.format);
     process.stdout.write(out);

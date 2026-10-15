@@ -17,7 +17,7 @@ The default scan contacts the supplied origin and standard paths below it:
 - `/.well-known/webmcp`;
 - the input URL or explicit `--content-url` for Markdown negotiation and response-header checks.
 
-It also asks the operating system's configured DNS resolver for `_index._agents.<target-host>` unless the target is local/private. Redirects are followed up to five hops. A sitemap URL advertised by the target may point to another origin.
+It also asks the operating system's configured DNS resolver for `_index._agents.<target-host>` unless the target is local/private. Redirects are followed up to five hops. A sitemap URL advertised by the target may point to another origin. `--crawl <n>` samples only sitemap pages on the target's own origin.
 
 ## Explicit network expansion
 
@@ -34,7 +34,7 @@ The tool never calls Cloudflare, WorkOS, Chrome, x402, UCP, MPP, or MCP services
 
 ## Headers and credentials
 
-`--header`, `--cookie`, and `--user-agent` are explicit user controls. Configured headers are sent by the shared HTTP client on its requests, including followed redirects, so do not provide sensitive credentials when scanning a target that redirects to an untrusted origin. Browser mode does not copy CLI headers or cookies into Chrome.
+`--header`, `--cookie`, and `--user-agent` are explicit user controls. Headers from `--header` and `--cookie` are sent only to the target's origin: requests to other origins, including redirects off the target and URLs the target advertises (sitemaps, skill artifacts), go without them, and so do `--mcp-url` and `--commerce-url` requests to other origins. `--user-agent` applies to every request. Browser mode does not copy CLI headers or cookies into Chrome.
 
 ## Data storage
 
