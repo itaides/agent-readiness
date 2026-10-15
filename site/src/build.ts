@@ -1,49 +1,59 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { checks } from '../../src/registry';
-import { formatJson } from '../../src/report';
+import { formatJson, formatMarkdown } from '../../src/report';
 import { formatHtml } from '../../src/report-html';
-import { REPO_URL, renderLanding, renderNotFound, renderScanPage } from './pages';
+import { minifyCss, minifyJs } from '../../src/report-html/minify';
+import { REPORT_JS } from '../../src/report-html/script';
+import {
+  SKILL_PATH,
+  agentsMd,
+  headersFile,
+  landingMarkdown,
+  llmsFullTxt,
+  llmsTxt,
+  robotsTxt,
+  sitemapMd,
+  sitemapXml,
+  skillMd,
+  skillsIndex,
+  tdmrepJson,
+} from './agent-files';
+import { renderLanding, renderNotFound, renderScanPage } from './pages';
 import { sampleReport } from './sample-report';
+import { SITE_CSS } from './styles';
 
-const ROBOTS_TXT = `# agent-readiness: agents and crawlers welcome
-User-agent: *
-Allow: /
-Disallow: /scan/
-`;
+const CHECKS_DOC = join(import.meta.dir, '..', '..', 'docs', 'checks.md');
 
-function llmsTxt(): string {
-  return `# agent-readiness
-
-> Open-source CLI that scores any URL, including localhost, against ${checks.length} AI-agent readiness checks across discoverability, content, bot access, capabilities and commerce. Every failed check comes with a fix and a one-line verify command.
-
-## Use it
-
-- Install: \`bun install -g github:itaides/agent-readiness\`
-- Scan: \`agent-readiness https://your-site.com\` (add \`--format json|html|md\`)
-- Gate CI on regressions: \`agent-readiness $URL --baseline readiness-baseline.json\`
-
-## Docs
-
-- [README](${REPO_URL}#readme): install, flags and CI usage
-- [Check reference](${REPO_URL}/blob/main/docs/checks.md): every check, its endpoint, pass criteria and spec
-- [Example report](/example/): HTML report for a sample site
-- [Example report JSON](/example/report.json): the same report as JSON
-`;
-}
-
-/** Writes the static site into outDir: landing, scan placeholder, example report, robots.txt, llms.txt and 404. */
-export async function buildSite(outDir: string): Promise<string[]> {
+/**
+ * Writes the static site into outDir: the pages, a Markdown version of each indexable page, and the
+ * agent-facing files (robots.txt, sitemaps, llms.txt, AGENTS.md, Agent Skills, TDMRep, _headers).
+ */
+export async function buildSite(outDir: string, now = new Date()): Promise<string[]> {
+  const updated = now.toISOString().slice(0, 10);
   const report = sampleReport();
+  const skill = skillMd();
   const files: Record<string, string> = {
-    'index.html': renderLanding(report),
+    'index.html': renderLanding(report, updated),
+    'index.md': landingMarkdown(),
     'scan/index.html': renderScanPage(),
     'example/index.html': formatHtml(report),
+    'example/index.md': formatMarkdown(report),
     'example/report.json': formatJson(report),
     '404.html': renderNotFound(),
-    'robots.txt': ROBOTS_TXT,
+    'robots.txt': robotsTxt(),
+    'sitemap.xml': sitemapXml(updated),
+    'sitemap.md': sitemapMd(),
     'llms.txt': llmsTxt(),
+    'llms-full.txt': llmsFullTxt(await readFile(CHECKS_DOC, 'utf8')),
+    'AGENTS.md': agentsMd(),
+    [SKILL_PATH]: skill,
+    '.well-known/agent-skills/index.json': skillsIndex(skill),
+    '.well-known/tdmrep.json': tdmrepJson(),
+    // Same-origin files rather than inline, so pages stay mostly text and the styles are cached.
+    'assets/site.css': minifyCss(SITE_CSS),
+    'assets/site.js': minifyJs(REPORT_JS),
+    _headers: headersFile(),
   };
 
   await rm(outDir, { recursive: true, force: true });

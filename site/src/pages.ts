@@ -1,13 +1,12 @@
 import { checks } from '../../src/registry';
 import { escapeHtml as esc, resolveScore } from '../../src/report-html';
-import { REPORT_JS } from '../../src/report-html/script';
 import type { Category, CheckResult, Report, Status } from '../../src/types';
-import { SITE_CSS } from './styles';
+import { VERSION } from '../../src/version';
+import { INSTALL_CMD, MARKDOWN_PAGES, NPM_PACKAGE, REPO_URL, SITE_URL } from './config';
 
-export const REPO_URL = 'https://github.com/itaides/agent-readiness';
+export { REPO_URL };
 const CHECKS_DOC_URL = `${REPO_URL}/blob/main/docs/checks.md`;
 const ISSUES_URL = `${REPO_URL}/issues`;
-const INSTALL_CMD = 'bun install -g github:itaides/agent-readiness';
 const LOCAL_SCAN_CMD = 'agent-readiness http://localhost:3000';
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -40,7 +39,8 @@ function termLine(cmd: string, highlight?: string): string {
   return `<div class="term-line"><span class="pr">$</span><code>${shown}</code><button class="btn" type="button" data-copy="${esc(cmd)}" aria-label="Copy command">${COPY_ICON}<span data-label>Copy</span></button></div>`;
 }
 
-function layout(opts: { title: string; description: string; body: string; noindex?: boolean }): string {
+function layout(opts: { title: string; description: string; body: string; path: string; noindex?: boolean; jsonLd?: object }): string {
+  const md = MARKDOWN_PAGES[opts.path];
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -52,9 +52,10 @@ function layout(opts: { title: string; description: string; body: string; noinde
 ${opts.noindex ? '<meta name="robots" content="noindex">\n' : ''}<meta property="og:title" content="${esc(opts.title)}">
 <meta property="og:description" content="${esc(opts.description)}">
 <meta property="og:type" content="website">
-<link rel="icon" href="${FAVICON}">
+<meta property="og:url" content="${SITE_URL}${opts.path}">
+${opts.noindex ? '' : `<link rel="canonical" href="${SITE_URL}${opts.path}">\n`}<link rel="icon" href="${FAVICON}">
 <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
-<style>${SITE_CSS}</style>
+${md ? `<link rel="alternate" type="text/markdown" href="${md}" title="Markdown version">\n` : ''}${opts.jsonLd ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, '\\u003c')}</script>\n` : ''}<link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
 <div class="ar">
@@ -73,14 +74,14 @@ ${opts.body}
 <div class="foot-links"><a href="${CHECKS_DOC_URL}" rel="noopener">Checks</a><a href="${REPO_URL}#readme" rel="noopener">Docs</a><a href="${REPO_URL}" rel="noopener">GitHub</a><a href="${ISSUES_URL}" rel="noopener">Report an issue</a></div>
 </div></footer>
 </div>
-<script>${REPORT_JS}</script>
+<script src="/assets/site.js" defer></script>
 </body>
 </html>`;
 }
 
 function installBlock(id = 'install'): string {
   return `<div class="term" id="${id}">
-<div class="term-h"><b>The same scan, from your terminal</b><span>Bun 1.1+ · JSON, HTML and Markdown output</span></div>
+<div class="term-h"><b>The same scan, from your terminal</b><span>Node 20+ or Bun · JSON, HTML and Markdown output</span></div>
 <div class="term-box">
 ${termLine(INSTALL_CMD)}
 ${termLine(LOCAL_SCAN_CMD, 'agent-readiness')}
@@ -251,7 +252,7 @@ ${panels}
 </section>`;
 }
 
-export function renderLanding(report: Report): string {
+export function renderLanding(report: Report, updated: string): string {
   const host = new URL(report.target).host;
   const body = `<main>
 <section class="wrap hero">
@@ -295,6 +296,22 @@ ${pillarsSection(host)}
     title: 'agent-readiness · Can AI agents use your site?',
     description: `Open-source CLI that scores any URL, including localhost, against ${checks.length} AI-agent readiness checks, with a fix and a verify command for every failure.`,
     body,
+    path: '/',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'agent-readiness',
+      description: `Open-source CLI that scores any URL against ${checks.length} AI-agent readiness checks and gives a fix for every failure.`,
+      url: `${SITE_URL}/`,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'macOS, Linux, Windows (Node.js 20+ or Bun)',
+      softwareVersion: VERSION,
+      license: 'https://opensource.org/licenses/MIT',
+      codeRepository: REPO_URL,
+      downloadUrl: `https://www.npmjs.com/package/${NPM_PACKAGE}`,
+      dateModified: updated,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
   });
 }
 
@@ -307,7 +324,7 @@ export function renderScanPage(): string {
 <p class="lede">The hosted scanner isn't live yet. The CLI runs the same ${checks.length} checks today, on production, staging or localhost.</p>
 ${scanForm()}
 <div class="term">
-<div class="term-h"><b>Your scan</b><span>Bun 1.1+</span></div>
+<div class="term-h"><b>Your scan</b><span>Node 20+ or Bun</span></div>
 <div class="term-box">
 ${termLine(INSTALL_CMD)}
 <div class="term-line"><span class="pr">$</span><code id="scan-cmd">agent-readiness https://your-site.com</code><button class="btn" type="button" id="scan-copy" data-copy="agent-readiness https://your-site.com" aria-label="Copy command">${COPY_ICON}<span data-label>Copy</span></button></div>
@@ -331,6 +348,7 @@ ${termLine(INSTALL_CMD)}
     title: 'Scan a site · agent-readiness',
     description: 'Run an agent-readiness scan from your terminal.',
     body,
+    path: '/scan/',
     noindex: true,
   });
 }
@@ -344,5 +362,5 @@ export function renderNotFound(): string {
 <a class="btn primary" href="/">Back to the scanner</a>
 </section>
 </main>`;
-  return layout({ title: 'Not found · agent-readiness', description: 'Page not found.', body, noindex: true });
+  return layout({ title: 'Not found · agent-readiness', description: 'Page not found.', body, path: '/404.html', noindex: true });
 }
