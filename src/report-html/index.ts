@@ -382,7 +382,39 @@ function shareSection(score: Score | undefined): string {
 }
 
 /** Self-contained HTML report: inline CSS and JS, no external requests. */
-export function renderHtml(report: Report, agentView: string): string {
+export interface HtmlOptions {
+  /** Where the report will be published. Adds a canonical link and og:url; the CLI can't know it. */
+  canonicalUrl?: string;
+}
+
+/** Head metadata so a published report is itself readable by agents: description, Open Graph, JSON-LD. */
+function headMeta(report: Report, score: Score | undefined, title: string, opts: HtmlOptions): string {
+  const when = formatDate(report.scannedAt);
+  const description = score
+    ? `agent-readiness report for ${report.target}: ${score.value}/100 (grade ${score.grade}), ${score.passed} of ${score.total} scored checks passing. Scanned ${when}.`
+    : `agent-readiness report for ${report.target}: ${report.checks.length} checks. Scanned ${when}.`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Report',
+    name: title,
+    description,
+    datePublished: report.scannedAt,
+    ...(opts.canonicalUrl ? { url: opts.canonicalUrl } : {}),
+    about: { '@type': 'WebSite', url: report.target },
+    creator: { '@type': 'SoftwareApplication', name: report.tool.name, softwareVersion: report.tool.version, url: REPO_URL },
+  };
+  return [
+    `<meta name="description" content="${esc(description)}">`,
+    `<meta property="og:type" content="article">`,
+    `<meta property="og:title" content="${esc(title)}">`,
+    `<meta property="og:description" content="${esc(description)}">`,
+    ...(opts.canonicalUrl ? [`<meta property="og:url" content="${esc(opts.canonicalUrl)}">`, `<link rel="canonical" href="${esc(opts.canonicalUrl)}">`] : []),
+    // Escape < so report text can't close the script element.
+    `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`,
+  ].join('\n');
+}
+
+export function renderHtml(report: Report, agentView: string, opts: HtmlOptions = {}): string {
   const origin = (() => {
     try {
       return new URL(report.target).origin;
@@ -419,6 +451,7 @@ export function renderHtml(report: Report, agentView: string): string {
   for (const c of report.checks) counts[c.status] += 1;
 
   const target = esc(report.target);
+  const title = `${score ? `${score.value}/100 (${grade}) · ` : ''}${report.target} · agent readiness`;
   const scannedAt = formatDate(report.scannedAt);
   const toolLabel = `${esc(report.tool.name)} ${esc(report.tool.version)}`;
   const rerun = `${report.tool.name} ${report.target} --format html`;
@@ -494,7 +527,8 @@ export function renderHtml(report: Report, agentView: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>${score ? `${score.value}/100 (${esc(grade)}) · ` : ''}${target} · agent readiness</title>
+<title>${esc(title)}</title>
+${headMeta(report, score, title, opts)}
 <style>${REPORT_CSS}</style>
 </head>
 <body>
@@ -545,6 +579,6 @@ ${fixDialog(report, views, gains, score)}
 </html>`;
 }
 
-export function formatHtml(report: Report): string {
-  return renderHtml(report, formatMarkdown(report));
+export function formatHtml(report: Report, opts: HtmlOptions = {}): string {
+  return renderHtml(report, formatMarkdown(report), opts);
 }
