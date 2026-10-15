@@ -224,7 +224,7 @@ const PILLARS: Pillar[] = [
 
 function pillarsSection(host: string): string {
   const tabs = PILLARS.map(
-    (p, i) => `<label class="tab"><input type="radio" name="pillar" id="p${i + 1}"><span class="tab-n">[0${i + 1}]</span><span class="tab-t">${p.label}</span><span class="tab-q">${esc(p.question)}</span></label>`,
+    (p, i) => `<label class="tab"><input type="radio" name="pillar" id="p${i + 1}"><span class="tab-ind" aria-hidden="true"></span><span class="tab-n">[0${i + 1}]</span><span class="tab-t">${p.label}</span><span class="tab-q">${esc(p.question)}</span></label>`,
   ).join('\n');
   const panels = PILLARS.map((p, i) => {
     const lines = p.probes
