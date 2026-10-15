@@ -154,6 +154,37 @@ describe('html report', () => {
   });
 });
 
+describe('html report head metadata', () => {
+  const ld = (html: string) => JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+
+  it('describes the report with JSON-LD, a meta description and Open Graph tags', () => {
+    const html = formatHtml(sample);
+    const data = ld(html);
+    expect(data['@type']).toBe('Report');
+    expect(data.datePublished).toBe(sample.scannedAt);
+    expect(data.about).toEqual({ '@type': 'WebSite', url: sample.target });
+    expect(data.creator.softwareVersion).toBe(sample.tool.version);
+    const description = html.match(/<meta name="description" content="([^"]*)">/)![1];
+    expect(description.length).toBeGreaterThanOrEqual(50);
+    expect(description).toContain('74/100');
+    expect(html).toContain('<meta property="og:title"');
+    expect(html).toContain('<meta property="og:description"');
+  });
+
+  it('adds a canonical link only when the publish URL is known', () => {
+    expect(formatHtml(sample)).not.toContain('rel="canonical"');
+    const html = formatHtml(sample, { canonicalUrl: 'https://reports.example.com/shop/' });
+    expect(html).toContain('<link rel="canonical" href="https://reports.example.com/shop/">');
+    expect(ld(html).url).toBe('https://reports.example.com/shop/');
+  });
+
+  it('keeps a hostile target inside the JSON-LD script and attributes', () => {
+    const html = formatHtml({ ...sample, target: 'https://x.test/</script><script>alert(1)</script>"' });
+    expect(html).not.toContain('</script><script>alert(1)');
+    expect(ld(html).about.url).toBe('https://x.test/</script><script>alert(1)</script>"');
+  });
+});
+
 describe('highlightJson', () => {
   it('tints keys, strings and numbers and escapes markup', () => {
     const out = highlightJson({ status: 404, note: '<x>' });
