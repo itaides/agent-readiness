@@ -4,7 +4,8 @@ import { parseHtml } from './_html';
 import { getOpenApi } from './_openapi';
 import type { HttpClient, Target } from '../types';
 
-const SPEC = { url: 'https://ora.ai/docs', asOf: '2026-10-22' };
+const ONBOARDING_SPEC = { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' };
+const SANDBOX_SPEC = { url: 'https://docs.stripe.com/sandboxes', asOf: '2026-10-22' };
 
 function getAnchors(target: Target, http: HttpClient) {
   return memoize(`dx-anchors:${target.contentUrl}`, async () => {
@@ -17,12 +18,12 @@ export const onboardingFriction: Check = {
   id: 'onboarding-friction',
   category: 'capabilities',
   title: 'Agent onboarding friction',
-  spec: SPEC,
+  spec: ONBOARDING_SPEC,
   defaultEnabled: true,
   scored: false,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'onboarding-friction', category: 'capabilities' as const, title: 'Agent onboarding friction', spec: SPEC };
+    const meta = { id: 'onboarding-friction', category: 'capabilities' as const, title: 'Agent onboarding friction', spec: ONBOARDING_SPEC };
     const signals: string[] = [];
     const spec = await getOpenApi(target, http);
     if (spec) signals.push('machine-readable API spec');
@@ -42,12 +43,12 @@ export const sandboxEnvironment: Check = {
   id: 'sandbox-environment',
   category: 'capabilities',
   title: 'Sandbox / test environment',
-  spec: SPEC,
+  spec: SANDBOX_SPEC,
   defaultEnabled: true,
   scored: false,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'sandbox-environment', category: 'capabilities' as const, title: 'Sandbox / test environment', spec: SPEC };
+    const meta = { id: 'sandbox-environment', category: 'capabilities' as const, title: 'Sandbox / test environment', spec: SANDBOX_SPEC };
     const signals: string[] = [];
     const spec = await getOpenApi(target, http);
     if (spec) {

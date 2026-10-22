@@ -1,18 +1,18 @@
 # Design handoff — agent-readiness web UI
 
-Handoff for a Claude design session. Goal: a visual direction + component spec for a web surface for `agent-readiness`, using **ora.ai** as the primary reference and our existing `--format html` report as the baseline to replace.
+Handoff for a Claude design session. Goal: a visual direction + component spec for a web surface for `agent-readiness`, using **hosted agent-readiness scoreboards** as the primary reference and our existing `--format html` report as the baseline to replace.
 
 ## Context
 
 `agent-readiness` is a Bun/TypeScript CLI that scans any URL (incl. localhost) for AI-agent readiness. It emits a JSON report (`--format json`) consumed by CI and an HTML report (`--format html`) humans read. The product now has a 0–100 score with letter grade, a 5-category check taxonomy, per-check remediation text + verify commands, and a `--crawl` mode that aggregates page-level checks across sampled sitemap URLs.
 
-## Reference: ora.ai (what to take, what not)
+## Reference: hosted scoreboards (what to take, what not)
 
-ora.ai ("Make your site work for agents") does these well:
+Hosted agent-readiness scoreboards ("make your site work for agents") do these well:
 
 - **Score as hero.** One number + letter grade dominates the page (`42/100`, `A+`). Big, unmissable, color-coded. Adopt this.
 - **Benchmark framing.** "117,739 sites scanned · average rank 42 · 5% rank B or above" — instantly tells you if your score matters. Adopt the pattern once we have aggregate data; design a slot for it now (can show "n checks passing" until then).
-- **Category leaderboards** ("Agent Tools: ZenRows 96 A+, Ora 94 A…"). A right-rail or below-fold table of well-known scores. Take the table style; data is aspirational.
+- **Category leaderboards** ("Agent Tools: ZenRows 96 A+, Acme 94 A…"). A right-rail or below-fold table of well-known scores. Take the table style; data is aspirational.
 - **"Watch an agent try your site" (Journey).** A timeline: intent → steps → searches → issues. Design the component; our CLI doesn't produce journey data yet — spec it as an optional card that renders only when `report.journey` exists.
 - **Terminal parity.** "The same scan, from your terminal" — CLI is a first-class citizen. Keep install/usage copy visible.
 

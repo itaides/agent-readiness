@@ -2,18 +2,21 @@ import type { Check, CheckResult } from '../types';
 import { fetchPage, fetchText, getEvidence, makeResult } from './_shared';
 import { parseHtml } from './_html';
 
-const SPEC = { url: 'https://ora.ai/docs', asOf: '2026-10-22' };
+const SOFT_404_SPEC = { url: 'https://developers.google.com/search/docs/crawling-indexing/http-network-errors', asOf: '2026-10-22' };
+const REDIRECT_SPEC = { url: 'https://developers.google.com/search/docs/crawling-indexing/301-redirects', asOf: '2026-10-22' };
+const PRICING_SPEC = { url: 'https://agenticweb.ai/pricing-md', asOf: '2026-10-22' };
+const AGENT_MODE_SPEC = { url: 'https://vercel.com/kb/guide/agent-readability-spec', asOf: '2026-10-22' };
 
 export const agentFriendly404: Check = {
   id: 'agent-friendly-404',
   category: 'content',
   title: 'Agent-friendly 404s',
-  spec: SPEC,
+  spec: SOFT_404_SPEC,
   defaultEnabled: true,
   scored: true,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'agent-friendly-404', category: 'content' as const, title: 'Agent-friendly 404s', spec: SPEC };
+    const meta = { id: 'agent-friendly-404', category: 'content' as const, title: 'Agent-friendly 404s', spec: SOFT_404_SPEC };
     const url = new URL(`/agent-readiness-probe-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, target.origin).toString();
     const res = await fetchText(url, http);
     const evidence = getEvidence('GET', url, res);
@@ -30,13 +33,13 @@ export const redirectHygiene: Check = {
   id: 'redirect-hygiene',
   category: 'content',
   title: 'Redirect hygiene',
-  spec: SPEC,
+  spec: REDIRECT_SPEC,
   defaultEnabled: true,
   scored: false,
   pageScoped: true,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'redirect-hygiene', category: 'content' as const, title: 'Redirect hygiene', spec: SPEC };
+    const meta = { id: 'redirect-hygiene', category: 'content' as const, title: 'Redirect hygiene', spec: REDIRECT_SPEC };
     const page = await fetchPage(target.contentUrl.toString(), http);
     if (page.status !== 200) return makeResult(meta, 'skip', `Content URL returned HTTP ${page.status}`, page.evidence);
     const doc = parseHtml(page.body);
@@ -77,13 +80,13 @@ export const pricingInfo: Check = {
   id: 'pricing-info',
   category: 'content',
   title: 'Pricing info accessible',
-  spec: SPEC,
+  spec: PRICING_SPEC,
   defaultEnabled: true,
   scored: false,
   pageScoped: true,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'pricing-info', category: 'content' as const, title: 'Pricing info accessible', spec: SPEC };
+    const meta = { id: 'pricing-info', category: 'content' as const, title: 'Pricing info accessible', spec: PRICING_SPEC };
     const page = await fetchPage(target.contentUrl.toString(), http);
     const doc = parseHtml(page.body);
     const link = doc.anchors.find((a) => /pricing|plans|buy/i.test(a.href) || /pricing|plans/i.test(a.text));
@@ -103,13 +106,13 @@ export const agentModeView: Check = {
   id: 'agent-mode-view',
   category: 'content',
   title: 'Agent mode view (?mode=agent)',
-  spec: SPEC,
+  spec: AGENT_MODE_SPEC,
   defaultEnabled: true,
   scored: false,
   pageScoped: true,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'agent-mode-view', category: 'content' as const, title: 'Agent mode view (?mode=agent)', spec: SPEC };
+    const meta = { id: 'agent-mode-view', category: 'content' as const, title: 'Agent mode view (?mode=agent)', spec: AGENT_MODE_SPEC };
     const u = new URL(target.contentUrl.toString());
     u.searchParams.set('mode', 'agent');
     const res = await fetchText(u.toString(), http);
