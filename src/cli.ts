@@ -3,7 +3,7 @@ import { createHttpClient } from './http';
 import { createTarget } from './target';
 import { scan } from './scanner';
 import { formatHuman, formatJson, formatHtml, formatMarkdown } from './report';
-import { checks, PRESETS } from './registry';
+import { checks, PRESETS, EXTERNAL_LOOKUP_CHECKS, MCP_URL_CHECKS, LLMS_TXT_CHECKS, AUTH_MD_CHECKS, COMMERCE_CHECKS } from './registry';
 import type { Check } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
 
@@ -26,6 +26,7 @@ interface Args {
   includeAuthMd: boolean;
   browser: boolean;
   verifySkillDigests: boolean;
+  externalLookups: boolean;
   baseline?: string;
   preset: PresetName;
   only?: string[];
@@ -49,6 +50,7 @@ Options:
   --mcp-url <url>               MCP HTTP endpoint used for server/discover
   --browser                     Run Lighthouse Agentic Browsing (requires Node, Lighthouse + Chrome 150+)
   --verify-skill-digests        Fetch Agent Skills artifacts and verify SHA-256 digests
+  --external-lookups            Enable checks that query third-party directories (MCP registry, Wikidata, npm/PyPI, skills.sh)
   --baseline <report.json>      Exit 1 only when pass/fail checks regress
   --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
@@ -76,6 +78,7 @@ function parseArgs(argv: string[]): Args {
     includeAuthMd: false,
     browser: false,
     verifySkillDigests: false,
+    externalLookups: false,
     preset: 'all',
     listChecks: false,
     help: false,
@@ -96,6 +99,7 @@ function parseArgs(argv: string[]): Args {
       case '--mcp-url': args.mcpUrl = argv[++i]; break;
       case '--browser': args.browser = true; break;
       case '--verify-skill-digests': args.verifySkillDigests = true; break;
+      case '--external-lookups': args.externalLookups = true; break;
       case '--baseline': args.baseline = argv[++i]; break;
       case '--cookie': args.headers.Cookie = argv[++i] ?? ''; break;
       case '--user-agent': args.userAgent = argv[++i]; break;
@@ -126,15 +130,12 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
     set = all.filter((c) => onlySet.has(c.id));
   } else {
     const explicitlyActivated = new Set<string>();
-    if (args.includeLlmsTxt) explicitlyActivated.add('llms-txt');
-    if (args.includeAuthMd) explicitlyActivated.add('auth-md');
+    if (args.includeLlmsTxt) for (const id of LLMS_TXT_CHECKS) explicitlyActivated.add(id);
+    if (args.includeAuthMd) for (const id of AUTH_MD_CHECKS) explicitlyActivated.add(id);
     if (args.browser) explicitlyActivated.add('browser-agentic');
-    if (args.commerceUrl) {
-      explicitlyActivated.add('ucp');
-      explicitlyActivated.add('x402');
-      explicitlyActivated.add('mpp');
-    }
-    if (args.mcpUrl) explicitlyActivated.add('mcp-server-discover');
+    if (args.externalLookups) for (const id of EXTERNAL_LOOKUP_CHECKS) explicitlyActivated.add(id);
+    if (args.commerceUrl) for (const id of COMMERCE_CHECKS) explicitlyActivated.add(id);
+    if (args.mcpUrl) for (const id of MCP_URL_CHECKS) explicitlyActivated.add(id);
     set = all.filter((c) => c.defaultEnabled || explicitlyActivated.has(c.id));
     const presetIds = PRESETS[args.preset];
     if (presetIds !== 'all') {

@@ -29,11 +29,11 @@ describe('e2e against fixture server', () => {
       }
       expect(failures).toEqual([]);
       expect(report.checks.find((check) => check.id === 'dns-aid')?.status).toBe('skip');
-      expect(report.checks.length).toBe(17);
+      expect(report.checks.length).toBe(88);
 
-      expect(report.summary.discoverability.pass).toBe(3);
-      expect(report.summary.content.pass).toBe(2);
-      expect(report.summary['bot-access'].pass).toBe(3);
+      expect(report.summary.discoverability.pass).toBe(5);
+      expect(report.summary.content.pass).toBe(4);
+      expect(report.summary['bot-access'].pass).toBe(5);
       expect(report.summary.capabilities.pass).toBe(6);
     } finally {
       await fixture.close();
@@ -54,7 +54,7 @@ describe('e2e against fixture server', () => {
         }
       }
       expect(passes).toEqual([]);
-      expect(report.checks.length).toBe(16);
+      expect(report.checks.length).toBe(87);
     } finally {
       await fixture.close();
     }

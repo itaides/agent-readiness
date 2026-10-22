@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/itaides/agent-readiness/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/runtime-bun%201.1%2B-black?logo=bun" alt="Bun 1.1+">
-  <img src="https://img.shields.io/badge/checks-23-blue" alt="23 checks">
+  <img src="https://img.shields.io/badge/checks-132-blue" alt="132 checks">
   <img src="https://img.shields.io/badge/telemetry-none-green" alt="Zero telemetry">
 </p>
 
@@ -68,42 +68,62 @@ agent-readiness http://localhost:3000
 
 ## What it checks
 
-23 checks across 5 categories, with unstable or runtime-dependent standards kept informational. Full pass criteria, endpoints, scoring rules, and spec references live in [`docs/checks.md`](docs/checks.md).
+132 checks across 5 categories, with unstable or runtime-dependent standards kept informational. Full pass criteria, endpoints, scoring rules, and spec references live in [`docs/checks.md`](docs/checks.md).
 
-### Discoverability (4)
+### Discoverability (15)
 - `robots.txt` ([RFC 9309](https://datatracker.ietf.org/doc/html/rfc9309))
 - `sitemap.xml` (with `robots.txt` fallback discovery)
 - `Link` header advertising `rel="api-catalog"` ([RFC 8288](https://datatracker.ietf.org/doc/html/rfc8288))
 - DNS-AID organization index (draft, informational)
+- ARD / AI Catalog discovery at `/.well-known/ard.json` (+ `ai-catalog.json` legacy alias), entry validity, and trust-manifest signals
+- `noindex` detection (`X-Robots-Tag` + meta robots) — sites that hide themselves from search entirely
+- Agent discovery files (`agent.json`), plugin manifests (`ai-plugin.json`), and agent rules (`AGENTS.md`, `CLAUDE.md`)
+- MCP registry listing, registry branding, and Wikipedia/Wikidata entity presence (opt-in `--external-lookups`)
 
-### Content (2)
+### Content (31)
 - Markdown content negotiation (`Accept: text/markdown`)
-- `llms.txt` ([llmstxt.org](https://llmstxt.org/) — opt-in via `--include-llms-txt`)
+- `llms.txt` ([llmstxt.org](https://llmstxt.org/) — opt-in via `--include-llms-txt`), plus formatting, link-resolution, and modular-file quality
+- Content readable without JavaScript, page token budget, code-fence validity, markdown frontmatter, `.md` URL fallback, `link rel="alternate"` markdown, `Vary: Accept`
+- Structured data: JSON-LD presence, entity `sameAs` linking, Organization schema completeness, schema-type breadth
+- Metadata completeness, redirect hygiene, agent-friendly 404s, `pricing.md`, pricing pages, `?mode=agent` views
+- Trust anchors (about/contact/privacy/security.txt), public API docs links, developer portal, agent usage guidance, docs-behind-auth sampling
+- NLWeb schema feeds, MCP well-known discovery, HTTP Link-header discovery
 
-### Bot access control (4)
+### Bot access control (9)
 - Content Signals in `robots.txt` and response headers (`ai-train`, `ai-input`, `search`, optional `use`)
 - AI bot rules in `robots.txt` — looks for User-agent lines targeting GPTBot, ClaudeBot, PerplexityBot, Google-Extended, and 10 more
 - Cloudflare-style Search / Agent / Training policy matrix (informational)
 - Web Bot Auth key directory at `/.well-known/http-message-signatures-directory`
+- Live bot-UA reachability: GPTBot/ClaudeBot/PerplexityBot probes for WAF blocking, agent-crawler reachability on the content page
+- `robots.txt` policy quality for AI search crawlers vs user-directed agents; bot-UA markdown access
 
-### Capabilities (10)
+### Capabilities (71)
 - A2A Agent Card at `/.well-known/agent-card.json`
 - Agent Skills v0.2 index at `/.well-known/agent-skills/index.json`, with optional SHA-256 artifact verification
 - API Catalog at `/.well-known/api-catalog` ([RFC 9727](https://datatracker.ietf.org/doc/html/rfc9727))
-- OAuth Authorization Server Metadata ([RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414))
+- OAuth Authorization Server Metadata ([RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414)) + scoped-permissions analysis
 - OAuth Protected Resource Metadata ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728))
 - MCP Server Card at `/.well-known/mcp/server-card.json`
 - WebMCP (fetch-only heuristic, informational)
-- `auth.md` agent registration guidance (opt-in, informational)
+- `auth.md` agent registration guidance + structure/endpoint checks (opt-in, informational)
 - MCP 2026-07-28 `server/discover` (explicit endpoint, informational)
 - Lighthouse Agentic Browsing (opt-in, informational)
+- OpenAPI family: spec discovery, reachable endpoints, schema coverage, typed error model, versioning/deprecation, pagination, async jobs, batch endpoints, `Idempotency-Key`, function-calling compatibility, schema complexity, JSON error bodies, rate-limit headers
+- GraphQL family: typed errors, versioning, pagination, async jobs, description coverage, batch mutations
+- Deep MCP family (with `--mcp-url`, read-only): initialize + server identity, tool listing/descriptions/schemas/naming/annotations, error handling, modern transport, auth mechanism, OAuth metadata, PKCE S256, resource listing/quality, multi-surface coverage, MCP Apps UI + view domain/CSP
+- Agent-auth family (with `--include-auth-md`): `agent_auth` discovery metadata, `WWW-Authenticate` hints, endpoint reachability
+- PAP/Poppy family: discovery doc, issuer binding, auth config, interface completeness, endpoint enforcement, cross-protocol consistency
+- NLWeb `/ask` + streaming, A2UI/generative-UI signals, onboarding friction, sandbox environment
+- SDK/CLI listings: npm/PyPI packages, multi-language SDKs, CLI tool, skills.sh presence + quality (opt-in `--external-lookups`)
 
-### Commerce (3, explicit scope)
+### Commerce (6, explicit scope)
 - UCP discovery at `/.well-known/ucp`
 - x402 v2 `PAYMENT-REQUIRED` challenge
 - MPP `WWW-Authenticate: Payment` challenge
+- ACP `checkout_sessions` + delegate-payment endpoints (informational)
+- AP2 agent-payments markers (informational)
 
-Commerce checks run only when you supply `--commerce-url`; they observe the initial 402 response and never pay. ACP and AP2 remain on the [`docs/roadmap.md`](docs/roadmap.md) watchlist until their external discovery criteria are stable.
+Commerce checks run only when you supply `--commerce-url`; they observe the initial 402 response and never pay.
 
 Browser mode expects Lighthouse 13.3+ on `PATH` (for example, `npm install -g lighthouse`) and Chrome 150+; set `AGENT_READINESS_LIGHTHOUSE` to an explicit Lighthouse executable when needed.
 
@@ -126,6 +146,7 @@ agent-readiness <url> [options]
   --mcp-url <url>               MCP HTTP endpoint used for server/discover
   --browser                     Run Lighthouse Agentic Browsing
   --verify-skill-digests        Fetch and verify Agent Skills artifacts
+  --external-lookups            Enable checks that query third-party directories (MCP registry, Wikidata, npm/PyPI, skills.sh)
   --baseline <report.json>      Exit 1 only for pass/fail regressions
   --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
@@ -225,7 +246,7 @@ src/
   types.ts           # Check, CheckResult, Target, HttpClient, Report
   checks/
     _shared.ts       # JSON well-known fetcher + shape validation helper
-    *.ts             # one file per check (23 of them)
+    *.ts             # check implementations, grouped into shared-fetch families (132 checks)
 test/
   checks/*.test.ts   # per-check unit tests
   e2e.test.ts        # all checks against fixture-server
