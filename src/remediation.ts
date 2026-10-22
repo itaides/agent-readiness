@@ -174,7 +174,15 @@ export function addRemediation(result: CheckResult, target: string): CheckResult
   }
 
   const guidance = GUIDANCE[result.id];
-  if (!guidance) return result;
+  if (!guidance) {
+    return {
+      ...result,
+      remediation: {
+        suggestion: 'See docs/checks.md for this check\'s pass criteria, implement the missing artifact or signal, then rerun the targeted verification.',
+        verifyCommand: `agent-readiness ${target} --only ${result.id}`,
+      },
+    };
+  }
 
   const promptPath = guidance.prompt ? `prompts/${result.id}.md` : undefined;
   return {

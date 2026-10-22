@@ -3,7 +3,7 @@ import { createHttpClient } from './http';
 import { createTarget } from './target';
 import { scan } from './scanner';
 import { formatHuman, formatJson, formatMarkdown } from './report';
-import { checks, PRESETS, SITE_TYPES } from './registry';
+import { checks, PRESETS, SITE_TYPES, EXTERNAL_LOOKUP_CHECKS, MCP_URL_CHECKS, AUTH_MD_CHECKS } from './registry';
 import { crawlPages } from './crawl';
 import type { Check, SiteType } from './types';
 import { compareBaseline, loadBaseline } from './baseline';
@@ -27,6 +27,7 @@ interface Args {
   includeLlmsTxt: boolean;
   includeAuthMd: boolean;
   includeAgentsMd: boolean;
+  externalLookups: boolean;
   crawl: number;
   browser: boolean;
   verifySkillDigests: boolean;
@@ -59,6 +60,8 @@ Options:
   --mcp-url <url>               MCP HTTP endpoint used for server/discover
   --browser                     Run Lighthouse Agentic Browsing (requires Node, Lighthouse + Chrome 150+)
   --verify-skill-digests        Fetch Agent Skills artifacts and verify SHA-256 digests
+  --external-lookups            Send the site name/domain to third-party directories
+                                (MCP registry, Wikidata, npm/PyPI, skills.sh)
   --baseline <report.json>      Exit 1 only when pass/fail checks regress
   --format human|json|html|md   Output format (default: human)
   --timeout <ms>                Per-request timeout (default: 5000)
@@ -86,6 +89,7 @@ function parseArgs(argv: string[]): Args {
     includeLlmsTxt: false,
     includeAuthMd: false,
     includeAgentsMd: false,
+    externalLookups: false,
     crawl: 0,
     browser: false,
     verifySkillDigests: false,
@@ -108,6 +112,7 @@ function parseArgs(argv: string[]): Args {
       case '--include-llms-txt': args.includeLlmsTxt = true; break;
       case '--include-auth-md': args.includeAuthMd = true; break;
       case '--include-agents-md': args.includeAgentsMd = true; break;
+      case '--external-lookups': args.externalLookups = true; break;
       case '--crawl': args.crawl = Number(argv[++i]) || 0; break;
       case '--content-url': args.contentUrl = argv[++i]; break;
       case '--commerce-url': args.commerceUrl = argv[++i]; break;
@@ -145,16 +150,24 @@ function selectChecks(all: Check[], args: Args): { selected: Check[]; warnings: 
     set = all.filter((c) => onlySet.has(c.id));
   } else {
     const explicitlyActivated = new Set<string>();
-    if (args.includeLlmsTxt) { explicitlyActivated.add('llms-txt'); explicitlyActivated.add('llms-full-txt'); }
-    if (args.includeAuthMd) explicitlyActivated.add('auth-md');
+    if (args.includeLlmsTxt) {
+      for (const id of ['llms-txt', 'llms-full-txt', 'llms-txt-formatting', 'llms-txt-links-resolve', 'modular-llms-txt']) {
+        explicitlyActivated.add(id);
+      }
+    }
+    if (args.includeAuthMd) for (const id of AUTH_MD_CHECKS) explicitlyActivated.add(id);
     if (args.includeAgentsMd) explicitlyActivated.add('agents-md');
+    if (args.externalLookups) for (const id of EXTERNAL_LOOKUP_CHECKS) explicitlyActivated.add(id);
     if (args.browser) explicitlyActivated.add('browser-agentic');
     if (args.commerceUrl) {
       explicitlyActivated.add('ucp');
       explicitlyActivated.add('x402');
       explicitlyActivated.add('mpp');
+      explicitlyActivated.add('acp-support');
+      explicitlyActivated.add('acp-delegate-payment');
+      explicitlyActivated.add('ap2-support');
     }
-    if (args.mcpUrl) explicitlyActivated.add('mcp-server-discover');
+    if (args.mcpUrl) for (const id of MCP_URL_CHECKS) explicitlyActivated.add(id);
     set = all.filter((c) => c.defaultEnabled || explicitlyActivated.has(c.id));
     const presetIds = PRESETS[args.preset];
     if (presetIds !== 'all') {

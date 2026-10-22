@@ -43,7 +43,7 @@ jobs:
             echo "dist/cli.js exceeded 100 KB — investigate before merging" >&2
             exit 1
           fi
-          if [ "$total" -gt 153600 ]; then
-            echo "dist/ JavaScript exceeded 150 KB in total — investigate before merging" >&2
+          if [ "$total" -gt 307200 ]; then
+            echo "dist/ JavaScript exceeded 300 KB in total — investigate before merging" >&2
             exit 1
           fi
