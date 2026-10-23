@@ -42,7 +42,7 @@ MIN_SCORE=70 BASELINE=.agent-readiness/baseline.json \
   bash scripts/agent-readiness-gate.sh https://staging.example.com
 ```
 
-It runs the CLI with `npx --yes agent-readiness-cli@0.3.0` (pinned, so a new release can't change your gate unannounced) and writes three files to `OUT_DIR` (default `agent-readiness-report/`):
+It runs the CLI with `npx --yes agent-readiness-cli@0.4.0` (pinned, so a new release can't change your gate unannounced) and writes three files to `OUT_DIR` (default `agent-readiness-report/`):
 
 - `report.json`: the gating scan, and the next baseline
 - `report.html`: self-contained report for a build artifact
@@ -56,7 +56,7 @@ It runs the CLI with `npx --yes agent-readiness-cli@0.3.0` (pinned, so a new rel
 | `SCAN_ARGS` | unset | Extra CLI flags, split on spaces, e.g. `--crawl 10` or `--preset content` |
 | `SCAN_HEADER` | unset | One request header for a protected target, from a secret |
 | `SCAN_COOKIE` | unset | Cookie value for a protected target, from a secret |
-| `AGENT_READINESS` | `npx --yes agent-readiness-cli@0.3.0` | Command that runs the CLI |
+| `AGENT_READINESS` | `npx --yes agent-readiness-cli@0.4.0` | Command that runs the CLI |
 
 The HTML and Markdown reports come from separate scans after the gating JSON scan. A flaky endpoint can therefore differ between files; the JSON report is the one the gate used.
 
@@ -121,7 +121,7 @@ bash scripts/agent-readiness-gate.sh "$AGENT_READINESS_URL"
 Without the script, call the CLI directly and gate with `--baseline`:
 
 ```sh
-npx --yes agent-readiness-cli@0.3.0 "$URL" --baseline baseline.json --format json > report.json
+npx --yes agent-readiness-cli@0.4.0 "$URL" --baseline baseline.json --format json > report.json
 ```
 
 ## Tips
