@@ -37,13 +37,13 @@ export const pageTokenBudget: Check = {
   id: 'page-token-budget',
   category: 'content',
   title: 'Page fits an agent token budget',
-  spec: { url: 'https://ora.ai/docs', asOf: '2026-10-22' },
+  spec: { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' },
   defaultEnabled: true,
   scored: false,
   pageScoped: true,
 
   async run(target, http): Promise<CheckResult> {
-    const meta = { id: 'page-token-budget', category: 'content' as const, title: 'Page fits an agent token budget', spec: { url: 'https://ora.ai/docs', asOf: '2026-10-22' } };
+    const meta = { id: 'page-token-budget', category: 'content' as const, title: 'Page fits an agent token budget', spec: { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' } };
     const { res, evidence } = await getMarkdown(target, http);
     let chars: number;
     if (res.status === 200 && isMarkdown(res)) {

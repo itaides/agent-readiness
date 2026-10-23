@@ -104,7 +104,7 @@ export const checks: Check[] = [
   ucp,
   x402,
   mpp,
-  // Ora-parity expansion: deterministic discovery/content/API/MCP/auth/commerce signals.
+  // Expanded catalog: deterministic discovery/content/API/MCP/auth/commerce signals.
   ardCatalog,
   ardEntriesValid,
   ardTrustManifest,

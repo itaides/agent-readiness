@@ -5,7 +5,7 @@ import { decodeBody, isRecord, makeResult } from './_shared';
 // target domain name to external APIs. They are opt-in via --external-lookups
 // and never run for local/private targets.
 
-const SPEC = { url: 'https://ora.ai/docs', asOf: '2026-10-22' };
+const SPEC = { url: 'https://docs.npmjs.com/about-the-public-npm-registry', asOf: '2026-10-22' };
 
 function brandOf(target: Target): string {
   const host = target.origin.hostname.toLowerCase().replace(/^www\./, '');

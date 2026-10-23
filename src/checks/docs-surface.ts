@@ -3,7 +3,13 @@ import { fetchPage, fetchText, getEvidence, isRecord, makeResult, memoize } from
 import { parseHtml, type AnchorTag } from './_html';
 import { getOpenApi } from './_openapi';
 
-const SPEC = { url: 'https://ora.ai/docs', asOf: '2026-10-22' };
+const SPECS: Record<string, { url: string; asOf: string }> = {
+  'trust-anchors': { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' },
+  'public-api-docs': { url: 'https://spec.openapis.org/oas/latest.html', asOf: '2026-10-22' },
+  'developer-portal': { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' },
+  'agent-instruction': { url: 'https://llmstxt.org/', asOf: '2026-10-22' },
+  'docs-auth-gate': { url: 'https://agent-ready.dev/what-is-an-agent-ready-website', asOf: '2026-10-22' },
+};
 
 function homeAnchors(target: Target, http: HttpClient): Promise<AnchorTag[]> {
   return memoize(`anchors:${target.contentUrl}`, async () => {
@@ -13,7 +19,7 @@ function homeAnchors(target: Target, http: HttpClient): Promise<AnchorTag[]> {
 }
 
 function meta(id: string, title: string) {
-  return { id, category: 'content' as const, title, spec: SPEC };
+  return { id, category: 'content' as const, title, spec: SPECS[id] };
 }
 
 export const trustAnchors: Check = {
