@@ -4,9 +4,26 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-23
+
+### Added
+
+- **102 new checks — 141 total.** The registry grew from 39 to 141 checks (94 default-enabled, 21 scored by default, up to 27 with opt-ins), covering the deterministic slice of what hosted agent-readiness scoreboards measure. See [`docs/checks.md`](docs/checks.md) for the full reference.
+  - **ARD / AI Catalog discovery:** `ard.json` + legacy `ai-catalog.json`, entry validity and trust-manifest checks (`ard-catalog` is scored).
+  - **Content quality:** metadata completeness, JSON-LD `sameAs` entity linking, Organization schema completeness, schema-type breadth, accessibility surface (document structure, native controls, accessible names, form labeling, injection safety), llms.txt quality trio (opt-in), Markdown frontmatter and code fences, page token budget, redirect hygiene, `agent-friendly-404` (scored), `pricing.md`, `?mode=agent` view, trust anchors, docs links and auth gating, NLWeb schema feeds, `/.well-known/mcp` and Link-header discovery.
+  - **Bot policy quality:** `robots.txt` stance for AI search crawlers vs user-directed agents.
+  - **API quality:** OpenAPI family (12 checks: reachable endpoints, schema coverage, typed error model, versioning, pagination, async jobs, batch endpoints, `Idempotency-Key`, rate-limit headers, function-calling compatibility, schema analysis, JSON error bodies) and a GraphQL mirror family (6).
+  - **Deep MCP via `--mcp-url`:** 19 read-only checks — initialize/identity, tool listing/descriptions/schemas/naming/annotations, error handling, transport, auth mechanism, OAuth metadata, PKCE S256, resources, MCP Apps and view CSP. Never invokes a tool, prompt, or resource.
+  - **Agent-auth and emerging protocols (informational):** `agent_auth` metadata and auth.md quality (`--include-auth-md`), PAP/Poppy draft family, NLWeb `/ask` + streaming, A2UI signals, onboarding friction, sandbox environment.
+  - **Commerce probes:** ACP `checkout_sessions` + delegate-payment and AP2 markers, behind `--commerce-url`. Still no payment credentials or completion.
+  - **`--external-lookups` flag:** opt-in third-party directory lookups (MCP registry, Wikidata, npm/PyPI, skills.sh). No external calls by default — local and CI targets stay hermetic.
+- New page-level checks are `pageScoped`, so `--crawl <n>` samples them across the sitemap; `--site-type content` marks the new API/agent-endpoint families not applicable.
+
 ### Changed
 
 - **The website moved to its own repository.** `site/` (the landing page and example report) now lives with the hosted product and uses the CLI through `agent-readiness-cli/library`. This repo's agent-readiness workflow runs the example gate script against the all-pass fixture app (`bun run testdata/serve.ts`) instead.
+- **Check `spec.url` fields now cite the primary standard or doc** that defines each pass criterion (RFCs, Google Search Central, npm registry docs, CommonMark, llmstxt.org, agent-ready.dev, Vercel agent-readability spec) rather than placeholder links.
+- **CI:** `dist/` JavaScript budget raised to 300 KB for the expanded check registry.
 
 ## [0.3.0] - 2026-10-15
 
